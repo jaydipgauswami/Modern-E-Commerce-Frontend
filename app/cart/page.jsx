@@ -1,29 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useCart } from "@/app/context/CartContext";
 
- function CartPage() {
-  const [cartItems, setCartItems] = useState([
-    { id: 1, name: "Wireless Headphones", price: 1200, quantity: 2, image: "/images/headphone.jpg" },
-    { id: 2, name: "Smart Watch", price: 2500, quantity: 1, image: "/images/smartwatch.jpg"},
-  ]);
+function CartPage() {
+  const { cartItems, removeFromCart,updateQuantity} = useCart(); 
+ const totalPrice = cartItems.reduce(
+  (acc, item) => acc + Number(item.price.toString().replace(/[^0-9.-]+/g, "")) * item.quantity,
+  0
+);
 
-  const updateQuantity = (id, value) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, quantity: value } : item
-      )
-    );
-  };
-
-  const removeItem = (id) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const totalPrice = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
 
   return (
     <div className="max-w-5xl mx-auto p-6 py-30">
@@ -48,13 +33,13 @@ import { useState } from "react";
                 <tr key={item.id}>
                   <td className="px-6 py-4 flex items-center gap-4">
                     <img
-                      src={item.image}
+                      src={item.img || item.image} // context me image ka key check karo
                       alt={item.name}
                       className="h-16 w-16 object-cover rounded"
                     />
                     <span>{item.name}</span>
                   </td>
-                  <td className="px-6 py-4">₹{item.price}</td>
+                  <td className="px-6 py-4">{item.price}</td>
                   <td className="px-6 py-4">
                     <input
                       type="number"
@@ -66,10 +51,12 @@ import { useState } from "react";
                       className="w-16 border rounded text-center"
                     />
                   </td>
-                  <td className="px-6 py-4">₹{item.price * item.quantity}</td>
+                <td className="px-6 py-4">
+  ₹{Number(item.price.toString().replace(/[^0-9.-]+/g, "")) * item.quantity}
+</td>
                   <td className="px-6 py-4">
                     <button
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeFromCart(item.id)}
                       className="text-red-600 hover:underline"
                     >
                       Remove
@@ -81,7 +68,7 @@ import { useState } from "react";
           </table>
 
           <div className="flex justify-end mt-6 items-center gap-6">
-            <span className="text-xl font-bold">Total: ₹{totalPrice}</span>
+            <span className="text-xl font-bold">Total: {totalPrice}</span>
             <button className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
               Checkout
             </button>
@@ -91,4 +78,4 @@ import { useState } from "react";
     </div>
   );
 }
-export default  CartPage;
+export default CartPage;

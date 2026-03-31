@@ -1,12 +1,38 @@
 "use client";
+import Link from "next/link";
 import { motion } from "framer-motion";
 
+
+
 const beautyProducts = [
-  { id: 1, name: "Skincare Kit", price: "₹1,500", img: "/images/skincare.jpg" },
-  { id: 2, name: "Lipstick Set", price: "₹900", img: "/images/lipstik.jpg" },
-  { id: 3, name: "Perfume", price: "₹2,800", img: "/images/perfyum.jpg" },
-  { id: 4, name: "Vitamin Supplements", price: "₹1,200", img: "/images/vitamin.jpg" },
-];
+  { 
+    id: 1, 
+    name: "Skincare Kit", 
+    price: "₹1,500", 
+    img: "/images/skincare.jpg", 
+    desc: "Complete skincare kit with cleanser, toner, and moisturizer for glowing skin." 
+  },
+  { 
+    id: 2, 
+    name: "Lipstick Set", 
+    price: "₹900", 
+    img: "/images/lipstik.jpg", 
+    desc: "Set of vibrant lipsticks in long-lasting shades for all occasions." 
+  },
+  { 
+    id: 3, 
+    name: "Perfume", 
+    price: "₹2,800", 
+    img: "/images/perfyum.jpg", 
+    desc: "Premium fragrance with a long-lasting scent to keep you fresh all day." 
+  },
+  { 
+    id: 4, 
+    name: "Vitamin Supplements", 
+    price: "₹1,200", 
+    img: "/images/vitamin.jpg", 
+    desc: "Essential vitamin supplements for daily health and immunity support." 
+  }];
 
  function Beauty() {
   return (
@@ -17,7 +43,11 @@ const beautyProducts = [
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {beautyProducts.map((product) => (
-            <motion.div
+             <Link
+    href={`/products/beauty/${product.id}`} // Ye dynamic link hai
+    key={product.id}
+  >
+       <motion.div
               key={product.id}
               className="bg-white rounded-lg shadow-lg p-4 cursor-pointer hover:shadow-xl transition-shadow"
               whileHover={{ scale: 1.05 }}
@@ -29,10 +59,11 @@ const beautyProducts = [
               />
               <h3 className="text-lg font-semibold">{product.name}</h3>
               <p className="text-gray-500">{product.price}</p>
-              <button className="mt-3 w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors">
-                Add to Cart
-              </button>
+             
             </motion.div>
+  </Link>
+            
+         
           ))}
         </div>
       </div>

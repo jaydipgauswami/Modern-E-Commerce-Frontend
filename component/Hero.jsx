@@ -1,9 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 
 export default function Hero() {
+   const router = useRouter();
   return (
     <section className="h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 via-white to-gray-200 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
@@ -39,7 +41,8 @@ export default function Hero() {
             transition={{ delay: 0.4, duration: 0.8 }}
             className="mt-8 flex gap-4"
           >
-            <button className="px-6 py-3 bg-black text-white rounded-xl shadow-md hover:scale-105 hover:bg-gray-800 transition duration-300">
+            <button   onClick={() => router.push("/products/electronics")}
+            className="px-6 py-3 bg-black text-white rounded-xl shadow-md hover:scale-105 hover:bg-gray-800 transition duration-300">
               Shop Now
             </button>
 

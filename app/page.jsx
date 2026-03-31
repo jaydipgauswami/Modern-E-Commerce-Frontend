@@ -14,7 +14,7 @@ export default function Home() {
       <Categories />
       <FeaturedProducts />
       <WhychooseUs />
-      <Footer />
+      
       </div>
 
     </div>
