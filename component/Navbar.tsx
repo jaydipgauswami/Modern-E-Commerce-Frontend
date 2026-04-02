@@ -1,29 +1,79 @@
 "use client";
+import { toast } from "sonner";
 import Link from "next/link"
 import { useState, useEffect } from "react";
-
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useAuth } from "../app/context/AuthContext";
+
+
 
 
 function Navbar() {
+const { user: authUser, logout } = useAuth();
+ const router = useRouter();
+  
+  type User = {
+  name: string;
+};
+  const [user, setUser] = useState<User | null>(null);
+  
+
   const [isOpen, setIsOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
       const [productOpen, setProductOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  
 
   useEffect(() => {
+const storedUser = localStorage.getItem("user");
+    if (storedUser) setUser(JSON.parse(storedUser) as User);
+    
+    
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
+  
 
     window.addEventListener("scroll", handleScroll);
+    
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+  console.log("USER DATA:", user);
+}, [user]);
+ const handleLogout = async () => {
+  
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      await fetch("http://localhost:5000/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: refreshToken }),
+      });
+
+      toast.success("Logged out successfully", { duration: 1000 });
+
+
+      localStorage.removeItem("user");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      setUser(null);  
+       if (logout) logout();
+  setTimeout(() => {
+      router.push("/login");
+    }, 500);
+    } catch (error) {
+      console.error("Logout failed:", error);
+       toast.error("Logout failed. Try again!")
+    }
+  };
   return (
     <nav
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-        scrolled ? "bg-white shadow-md" : "bg-transparent"
+         "bg-white shadow-md"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
@@ -74,7 +124,41 @@ function Navbar() {
 </li>
           <li className="cursor-pointer hover:text-gray-500"> <Link href="/cart">Cart</Link></li>
           <li className="cursor-pointer hover:text-gray-500"><Link href="/contact">Contact</Link></li>
-  <button className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800">Login</button></ul>
+          
+  <div className="space-x-4">
+  {authUser ? (
+    <>
+      {/* Optional greeting */}
+      {/* <span className="text-gray-700 font-medium">
+        Hi, {authUser.name}
+      </span> */}
+
+      <button
+        onClick={handleLogout} // ya handleLogout agar tu extra logic use kar raha hai
+        className="text-white bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 transition"
+      >
+        Logout
+      </button>
+    </>
+  ) : (
+    <>
+      <Link
+        href="/login"
+        className="text-gray-700 hover:text-indigo-600 font-medium"
+      >
+        Login
+      </Link>
+
+      <Link
+        href="/register"
+        className="text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+      >
+        Register
+      </Link>
+    </>
+  )}
+</div>  </ul>
+  
         {/* Hamburger */}
         <div
           className="md:hidden cursor-pointer"

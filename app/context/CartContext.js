@@ -1,31 +1,33 @@
 "use client";
 import { createContext, useState, useContext } from "react";
 
-// 1️⃣ Cart Context create
+// Cart Context create
 const CartContext = createContext();
 
-// 2️⃣ Provider Component
+//  Provider Component
 export const CartProvider  = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
 
   // Add to cart function
-  const addToCart = (product,quantity = 1) => {
-    // Check if product already in cart
-    const exist = cartItems.find((item) => item.id === product.id);
+ const addToCart = (product, quantity = 1) => {
+  const cleanPrice = Number(product.price.toString().replace(/[^0-9.-]+/g, ""));
+
+  setCartItems(prevCart => {
+    // find exact match by id + options (like size, color)
+    const exist = prevCart.find(item => item.id === product.id && item.size === product.size);
+
     if (exist) {
-      // Agar product already hai to quantity increase
-      setCartItems(
-        cartItems.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity}
-            : item
-        )
+      return prevCart.map(item =>
+        item.id === product.id && item.size === product.size
+          ? { ...item, quantity: item.quantity + quantity }
+          : item
       );
     } else {
-      // Naya product add karo
-      setCartItems([...cartItems, { ...product, quantity}]);
+      const uniqueId = Date.now() + Math.random();
+      return [...prevCart, { ...product, price: cleanPrice, quantity, id: uniqueId }];
     }
-  };
+  });
+};
   const updateQuantity = (id, quantity) => {
   setCartItems(
     cartItems.map((item) =>

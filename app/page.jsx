@@ -8,7 +8,7 @@ import Footer from "../component/Footer";
 export default function Home() {
   return (
     <div>
-         <Navbar />
+         
       <div className="mt-20">
         <Hero />
       <Categories />
