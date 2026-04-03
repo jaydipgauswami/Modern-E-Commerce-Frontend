@@ -23,8 +23,8 @@ export const CartProvider  = ({ children }) => {
           : item
       );
     } else {
-      const uniqueId = Date.now() + Math.random();
-      return [...prevCart, { ...product, price: cleanPrice, quantity, id: uniqueId }];
+    const cleanPrice = Number(product.price.toString().replace(/[^0-9.-]+/g, ""));
+      return [...prevCart, { ...product, price: cleanPrice, quantity }];
     }
   });
 };
@@ -48,5 +48,4 @@ export const CartProvider  = ({ children }) => {
   );
 };
 
-// 3️⃣ Custom hook for easy use
 export const useCart = () => useContext(CartContext);
