@@ -1,5 +1,7 @@
 "use client";
+import { toast } from "sonner";
 import { createContext, useState, useContext } from "react";
+
 
 // Cart Context create
 const CartContext = createContext();
@@ -11,6 +13,10 @@ export const CartProvider  = ({ children }) => {
   // Add to cart function
  const addToCart = (product, quantity = 1) => {
   const cleanPrice = Number(product.price.toString().replace(/[^0-9.-]+/g, ""));
+
+    const exist = cartItems.find(
+    item => item.id === product.id && item.size === product.size
+  );
 
   setCartItems(prevCart => {
     // find exact match by id + options (like size, color)
@@ -27,6 +33,12 @@ export const CartProvider  = ({ children }) => {
       return [...prevCart, { ...product, price: cleanPrice, quantity }];
     }
   });
+
+    if (exist) {
+    toast.success("Quantity updated ");
+  } else {
+    toast.success("Product added to cart ");
+  }
 };
   const updateQuantity = (id, quantity) => {
   setCartItems(

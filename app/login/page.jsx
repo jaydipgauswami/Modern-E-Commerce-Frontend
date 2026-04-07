@@ -58,8 +58,12 @@ const { login } = useAuth();
       login(data.user);
       toast.success("Login successful",{duration:"1000"});
       setTimeout(() => {
-        router.push("/");
-      },300);
+  if (data.user.role === "admin") {
+    router.push("/admin/dashboard");
+  } else {
+    router.push("/");
+  }
+}, 300);
     } catch (err) {
       toast.error(err.message);
     } finally {
