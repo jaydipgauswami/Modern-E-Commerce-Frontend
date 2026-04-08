@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Toaster ,toast } from "sonner";
-import { Input } from "@/component/ui/input"
+import { Input } from "../../components/ui/input"
 import { useAuth } from "../context/AuthContext";
 
 
@@ -53,7 +53,7 @@ const { login } = useAuth();
         throw new Error(data.message || "Login failed");
       }
       // Save JWT + User
-      localStorage.setItem("token", data.token);
+          localStorage.setItem("token", data.accessToken);
       localStorage.setItem("user", JSON.stringify(data.user));
       login(data.user);
       toast.success("Login successful",{duration:"1000"});
