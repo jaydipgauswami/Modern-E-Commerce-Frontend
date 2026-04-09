@@ -12,7 +12,7 @@ import { useAuth } from "../app/context/AuthContext";
 function Navbar() {
 const { user: authUser, logout } = useAuth();
  const router = useRouter();
-  
+  console.log("AUTH USER:", authUser);
   type User = {
   name: string;
 };
@@ -25,20 +25,15 @@ const { user: authUser, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   
 
-  useEffect(() => {
-const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser) as User);
-    
-    
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-  
+ useEffect(() => {
+  const handleScroll = () => {
+    setScrolled(window.scrollY > 50);
+  };
 
-    window.addEventListener("scroll", handleScroll);
-    
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  window.addEventListener("scroll", handleScroll);
+
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
 
   useEffect(() => {
   console.log("USER DATA:", user);
@@ -123,16 +118,23 @@ const storedUser = localStorage.getItem("user");
   )}
 </li>
           <li className="cursor-pointer hover:text-gray-500"> <Link href="/cart">Cart</Link></li>
+
+       
           <li className="cursor-pointer hover:text-gray-500"><Link href="/contact">Contact</Link></li>
+
+            {authUser?.role === "admin" && (
+    <Link
+      href="/admin/dashboard"
+      className="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+    >
+      Dashboard
+    </Link>
+  )}
           
   <div className="space-x-4">
   {authUser ? (
     <>
-      {/* Optional greeting */}
-      {/* <span className="text-gray-700 font-medium">
-        Hi, {authUser.name}
-      </span> */}
-
+  
       <button
         onClick={handleLogout} // ya handleLogout agar tu extra logic use kar raha hai
         className="text-white bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 transition"
@@ -194,8 +196,46 @@ const storedUser = localStorage.getItem("user");
    
 
     <Link href="/cart" className="block py-2 hover:text-blue-600">Cart</Link>
+  
     <Link href="/contact" className="block py-2 hover:text-blue-600">Contact</Link>
-<button className="W-full px-4 py-2 bg-black text-white rounded-lg">Login</button>
+
+   {authUser ? (
+  <>
+    {/* Admin Dashboard */}
+    {authUser?.role === "admin" && (
+      <Link
+        href="/admin/dashboard"
+         className="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+      >
+        Dashboard
+      </Link>
+    )}
+
+    {/* Logout */}
+    <button
+      onClick={handleLogout}
+      className="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+    >
+      Logout
+    </button>
+  </>
+) : (
+  <>
+    <Link
+      href="/login"
+      className="block py-2 px-4 bg-black text-white rounded-lg text-center"
+    >
+      Login
+    </Link>
+
+    <Link
+      href="/register"
+      className="block py-2 px-4 bg-indigo-600 text-white rounded-lg text-center"
+    >
+      Register
+    </Link>
+  </>
+)}
   </div>
 )}
     </nav>

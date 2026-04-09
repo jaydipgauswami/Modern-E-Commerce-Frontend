@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Toaster ,toast } from "sonner";
+import { parseJwt, isTokenExpired, refreshToken } from '../../utils/auth';
 import {
   Table, TableHeader, TableRow, TableHead, TableBody, TableCell
 } from "@/components/ui/table";
@@ -11,7 +13,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
 
-import toast, { Toaster } from "react-hot-toast";
+
 
 const PAGE_SIZE = 5;
 
@@ -19,8 +21,11 @@ export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
+  // const [editing, setEditing] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
+   const [files, setFile] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [page, setPage] = useState(1);
 
@@ -43,8 +48,6 @@ export default function AdminProducts() {
     if (categoryFilter) {
       url += `&category_id=${categoryFilter}`;
     }
-
-   
 
     const res = await fetch(url);
     const data = await res.json();
@@ -87,34 +90,55 @@ export default function AdminProducts() {
   }, [products, page]);
 
   // Add / Update Product
-  const handleSubmit = async () => {
+ const handleSubmit = async () => {
   try {
+    const token = localStorage.getItem("token");
+
     const formData = new FormData();
     formData.append("name", form.name);
     formData.append("price", form.price);
     formData.append("stock", form.stock);
-    formData.append("category_id", form.category_id); //
-    if (form.image) formData.append("image", form.image);
+    formData.append("category_id", form.category_id);
 
-    const url = editing
-      ? `http://localhost:5000/api/products/${editing.id}`
+    if (form.image) {
+      formData.append("image", form.image);
+    }
+
+    const url = isEditMode
+      ? `http://localhost:5000/api/products/${editId}`
       : "http://localhost:5000/api/products";
 
-    const method = editing ? "PUT" : "POST";
+    const method = isEditMode ? "PUT" : "POST";
 
-    const res = await fetch(url, { method, body: formData });
+    const res = await fetch(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
 
-    const data = await res.json(); 
+    const data = await res.json();
 
     if (res.ok) {
-      toast.success(editing ? "Product Updated" : "Product Added");
+      toast.success(isEditMode ? "Product Updated" : "Product Added");
+
       setOpen(false);
-      setEditing(null);
-      setForm({ name: "", price: "", stock: "", category_id: "", image: null });
+      setIsEditMode(false);
+      setEditId(null);
+
+      setForm({
+        name: "",
+        price: "",
+        stock: "",
+        category_id: "",
+        image: null
+      });
+
+      setFile(null);
       fetchProducts();
     } else {
-      toast.error(data.message || "Failed to add product");
-      console.log("Backend Error:", data);
+      toast.error(data.message || "Failed");
     }
   } catch (err) {
     console.log(err);
@@ -122,12 +146,19 @@ export default function AdminProducts() {
   }
 };
   // Delete
-  const handleDelete = async (id) => {
-    
+ const handleDelete = async (id) => {
   try {
-    const token = localStorage.getItem("token");
+    let token = localStorage.getItem("token");
 
-    await fetch(`http://localhost:5000/api/products/${id}`, {
+    // Token expired? Refresh karo
+    if (isTokenExpired(token)) {
+      console.log("Token expired, refreshing...");
+      token = await refreshToken();
+      if (!token) return; // refresh fail → login page redirect
+    }
+
+    // DELETE request
+    const res = await fetch(`http://localhost:5000/api/products/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -135,30 +166,60 @@ export default function AdminProducts() {
       },
     });
 
+    if (!res.ok) {
+      const data = await res.json();
+      toast.error(data.message || "Delete failed");
+      return;
+    }
+
     toast.success("Product Deleted");
     fetchProducts();
-  } catch {
+  } catch (err) {
+    console.error(err);
     toast.error("Delete failed");
   }
 };
 
-  const handleEdit = (product) => {
-    setEditing(product);
-    setForm(product);
-    setOpen(true);
-  };
+const handleAddNew = () => {
+  setIsEditMode(false);
+  setEditId(null);
+
+  setForm({
+    name: "",
+    price: "",
+    stock: "",
+    category_id: "",
+    image: null
+  });
+
+  setOpen(true);
+};
+ const handleEdit = (product) => {
+  setIsEditMode(true);
+  setEditId(product.id);
+
+  setForm({
+    name: product.name,
+    price: product.price,
+    stock: product.stock,
+    category_id: product.category_id,
+    image: null
+  });
+
+  setOpen(true);
+};
 
   const handleImageUpload = (e) => {
-    setForm({ ...form, image: e.target.files[0] });
+    setForm({ ...form, image: e.target.files[0]});
   };
 
   return (
     <div className="p-6">
-      <Toaster />
+      <Toaster position="top-right" />
 
       <div className="flex justify-between items-center mb-4 mt-25">
         <h1 className="text-2xl font-bold">Product Management</h1>
-        <Button onClick={() => setOpen(true)}>Add Product</Button>
+       <Button onClick={handleAddNew}>Add Product</Button>
       </div>
 
       {/* Search + Filter */}
@@ -240,7 +301,7 @@ export default function AdminProducts() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Product" : "Add Product"}</DialogTitle>
+            <DialogTitle>{isEditMode ? "Edit Product" : "Add Product"}</DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col gap-3">
@@ -278,7 +339,7 @@ export default function AdminProducts() {
 
             <input type="file" onChange={handleImageUpload} />
 
-            <Button onClick={handleSubmit}>{editing ? "Update" : "Create"}</Button>
+            <Button onClick={handleSubmit}>{isEditMode ? "Update" : "Create"}</Button>
           </div>
         </DialogContent>
       </Dialog>
