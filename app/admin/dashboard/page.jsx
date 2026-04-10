@@ -15,28 +15,8 @@ export default function AdminDashboard() {
   const lastProduct = products[products.length - 1];
 
   return (
-    <div className="flex min-h-screen bg-gray-100 ">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-md flex flex-col">
-        <div className="p-6 text-2xl font-bold border-b">Admin Panel</div>
-        <nav className="flex-1 p-4 space-y-2">
-          <Link href="/admin/dashboard" className="flex items-center gap-3 p-2 rounded hover:bg-gray-100">
-            <FaChartLine /> Dashboard
-          </Link>
-          <Link href="/admin/products" className="flex items-center gap-3 p-2 rounded hover:bg-gray-100">
-            <FaBox /> Products
-          </Link>
-          <Link href="/admin/orders" className="flex items-center gap-3 p-2 rounded hover:bg-gray-100">
-            <FaShoppingCart /> Orders
-          </Link>
-          <Link href="/admin/users" className="flex items-center gap-3 p-2 rounded hover:bg-gray-100">
-            <FaUsers /> Users
-          </Link>
-          <Link href="/admin/reports" className="flex items-center gap-3 p-2 rounded hover:bg-gray-100">
-            <FaChartLine /> Reports
-          </Link>
-        </nav>
-      </aside>
+    <div className="flex bg-gray-100 ">
+
 
       {/* Main Content */}
       <div className="flex-1 p-6">

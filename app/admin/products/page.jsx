@@ -15,7 +15,7 @@ import {
 
 
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 6;
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -28,6 +28,7 @@ const [editId, setEditId] = useState(null);
    const [files, setFile] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0); 
 
   const [form, setForm] = useState({
     name: "",
@@ -80,14 +81,12 @@ const [editId, setEditId] = useState(null);
 
   // Refetch products when search, filter, or page changes
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(page);
   }, [search, categoryFilter, page]);
 
   // Pagination calculation
-  const totalPages = Math.ceil(products.length / PAGE_SIZE);
-  const paginatedProducts = useMemo(() => {
-    return products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  }, [products, page]);
+ const totalPages = Math.ceil(total / PAGE_SIZE);
+
 
   // Add / Update Product
  const handleSubmit = async () => {
@@ -144,7 +143,7 @@ const [editId, setEditId] = useState(null);
     console.log(err);
     toast.error("Something went wrong");
   }
-};
+};  
   // Delete
  const handleDelete = async (id) => {
   try {
@@ -214,24 +213,25 @@ const handleAddNew = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 ">
       <Toaster position="top-right" />
 
-      <div className="flex justify-between items-center mb-4 mt-25">
+      <div className="flex justify-between items-center mb-4 ">
         <h1 className="text-2xl font-bold">Product Management</h1>
        <Button onClick={handleAddNew}>Add Product</Button>
       </div>
 
       {/* Search + Filter */}
-      <div className="flex gap-4 mb-4">
+      <div className="flex gap-4 mb-4 ">
         <Input
           placeholder="Search products..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          className="border border-gray-300"
         />
 
         <select
-          className="border rounded px-3 py-2"
+          className="border rounded px-3 py-2  border-gray-300"
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
         >
@@ -242,8 +242,8 @@ const handleAddNew = () => {
         </select>
       </div>
 
-      <Card>
-        <CardContent className="p-4">
+      <Card className=" border border-gray-300">
+        <CardContent className="p-4 ">
           <Table>
             <TableHeader>
               <TableRow>
@@ -257,7 +257,7 @@ const handleAddNew = () => {
             </TableHeader>
 
             <TableBody>
-              {paginatedProducts.map((p) => (
+              {products.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell>
                     {p.image && (
@@ -282,12 +282,19 @@ const handleAddNew = () => {
 
           {/* Pagination */}
           <div className="flex justify-center items-center gap-2 mt-4">
-            <Button onClick={() => setPage(prev => prev - 1)} disabled={page === 1}>Prev</Button>
+            <Button onClick={() => {
+  if (page > 1) {
+    setPage(prev => prev - 1);
+  }
+}} disabled={page === 1}>Prev</Button>
             {Array.from({ length: totalPages }, (_, i) => (
               <Button
                 key={i}
-                onClick={() => setPage(i + 1)}
-                variant={page === i + 1 ? "default" : "outline"}
+               onClick={() => {
+  if (page < totalPages) {
+    setPage(prev => prev + 1);
+  }
+}}
               >
                 {i + 1}
               </Button>
@@ -299,7 +306,7 @@ const handleAddNew = () => {
 
       {/* Add / Edit Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>{isEditMode ? "Edit Product" : "Add Product"}</DialogTitle>
           </DialogHeader>
