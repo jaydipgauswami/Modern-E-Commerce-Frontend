@@ -28,7 +28,7 @@ const [editId, setEditId] = useState(null);
    const [files, setFile] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0); 
+  const [totalPages ,setTotalPages] = useState(0); 
 
   const [form, setForm] = useState({
     name: "",
@@ -56,6 +56,8 @@ const [editId, setEditId] = useState(null);
 
     if (data.success) {
       setProducts(data.products);
+      setTotalPages(Number(data.totalPages));   
+  setPage(Number(data.currentPage));      
     } else {
       setProducts([]);
     }
@@ -68,7 +70,7 @@ const [editId, setEditId] = useState(null);
     try {
       const res = await fetch("http://localhost:5000/api/catagories");
       const data = await res.json();
-       console.log("API RESPONSE:", data);
+      //  console.log("API RESPONSE:", data);
       setCategories(data.categories);
     } catch {
       toast.error("Failed to load categories");
@@ -85,7 +87,7 @@ const [editId, setEditId] = useState(null);
   }, [search, categoryFilter, page]);
 
   // Pagination calculation
- const totalPages = Math.ceil(total / PAGE_SIZE);
+
 
 
   // Add / Update Product
@@ -287,19 +289,13 @@ const handleAddNew = () => {
     setPage(prev => prev - 1);
   }
 }} disabled={page === 1}>Prev</Button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <Button
-                key={i}
-               onClick={() => {
-  if (page < totalPages) {
-    setPage(prev => prev + 1);
-  }
-}}
-              >
-                {i + 1}
-              </Button>
-            ))}
-            <Button onClick={() => setPage(prev => prev + 1)} disabled={page === totalPages}>Next</Button>
+
+           <Button
+    onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+    disabled={page === totalPages}
+  >
+    Next
+  </Button>
           </div>
         </CardContent>
       </Card>

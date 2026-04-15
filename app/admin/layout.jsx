@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FaChartLine, FaBox, FaShoppingCart, FaUsers } from "react-icons/fa";
+import { FaChartLine, FaBox, FaShoppingCart, FaUsers , FaThLarge } from "react-icons/fa";
 
 const SidebarLink = ({ href, icon, label }) => {
   return (
@@ -36,6 +36,12 @@ export default function AdminLayout({ children }) {
             href="/admin/products"
             icon={<FaBox />}
             label="Products"
+          />
+
+             <SidebarLink
+            href="/admin/Category"
+            icon={ <FaThLarge /> }
+            label="Category"
           />
 
           <SidebarLink
