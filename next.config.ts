@@ -4,7 +4,13 @@ const nextConfig: NextConfig = {
   /* config options here */
    reactStrictMode: true,
    images: {
-    domains: ['example.com'], // ✅ yaha tumhare image host ka domain
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "example.com",
+        pathname: "/**",
+      },
+    ],
   },
 };
 
