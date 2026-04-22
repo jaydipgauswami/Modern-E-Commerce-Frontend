@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Toaster ,toast } from "sonner";
-
+import { apiFetch } from "../../api/api"
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
@@ -12,95 +12,86 @@ export default function CategoriesPage() {
 const [editName, setEditName] = useState("");
 
 
-    useEffect(() => {
-      const token = localStorage.getItem("token");
-    fetch("http://localhost:5000/api/catagories" , {
-        headers: {
-    Authorization: `Bearer ${token}`,
-  },
+   
+  useEffect(() => {
+  apiFetch("http://localhost:5000/api/catagories")
+    .then(data => {
+      console.log(data);
+      setCategories(data.categories || []);
     })
-      .then(res => res.json())
-      
-      .then(data => {
-        console.log(data)
-         setCategories(data.categories)
-       });
-  }, []);
+    .catch(err => {
+      console.error(err.message);
+    });
+}, []);
  
-
  const handleSubmit = async () => {
-  const token = localStorage.getItem("token");
-
   if (!name) return alert("Enter category name");
 
- try{
-   const res = await fetch("http://localhost:5000/api/catagories", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ name }),
-  });
-    if (!res.ok) throw new Error();
-      toast.success("Category added successfully ");
-    setName("");
- await fetchCategories();
- }catch(error){
-  toast.error("Failed to add category ");
- }
+  try {
+    const data = await apiFetch("http://localhost:5000/api/catagories", {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    });
 
-  
+    toast.success("Category added successfully");
+
+    setName("");
+    await fetchCategories();
+
+  } catch (error) {
+    toast.error(error.message || "Failed to add category");
+  }
 };
+
 
 const handleUpdate = async () => {
-  const token = localStorage.getItem("token");
-
   if (!editName) return toast.error("Enter category name");
 
-try{
- const res =  await fetch(`http://localhost:5000/api/catagories/${editCategory.id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ name: editName }),
-  });
-   if (!res.ok) throw new Error();
-      toast.success("Category update successfully ");
+  try {
+    const data = await apiFetch(
+      `http://localhost:5000/api/catagories/${editCategory.id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ name: editName }),
+      }
+    );
 
-  setEditCategory(null);
-  setEditName("");
- await fetchCategories();
-}catch(error){
- toast.error("Failed to update category");
-}
+    toast.success("Category updated successfully");
+
+    setEditCategory(null);
+    setEditName("");
+    await fetchCategories();
+
+  } catch (error) {
+    toast.error(error.message || "Failed to update category");
+  }
 };
 
-    const fetchCategories = async () => {
-    const res = await fetch("http://localhost:5000/api/catagories");
-    const data = await res.json();
-     setCategories(data.categories);
-  };
+ 
+const fetchCategories = async () => {
+  try {
+    const data = await apiFetch("http://localhost:5000/api/catagories");
 
-    const handleDelete = async (id) => {
-  const token = localStorage.getItem("token");
+    setCategories(data.categories || []);
 
-  try{
- const res =  await fetch(`http://localhost:5000/api/catagories/${id}`, {
-      method: "DELETE",
-       headers: {
-    Authorization: `Bearer ${token}`,
-  },
-    });
-     if (!res.ok) throw new Error();
-      toast.success("Category delete successfully ");
-   await fetchCategories();
-  }catch(error){
-toast.error("Failed to delete category");
+  } catch (error) {
+    console.error(error);
   }
-  };
+};
+   const handleDelete = async (id) => {
+  try {
+    await apiFetch(`http://localhost:5000/api/catagories/${id}`, {
+      method: "DELETE",
+    });
+
+    toast.success("Category deleted successfully");
+
+    await fetchCategories();
+
+  } catch (error) {
+    toast.error(error.message || "Failed to delete category");
+  }
+};
 
    const handleEdit = (cat) => {
   setEditCategory(cat);   // pura object store
@@ -110,7 +101,7 @@ toast.error("Failed to delete category");
 
   
   return (
-    <div className="p-6">
+    <div className="p-6 ">
       <h1 className="text-2xl font-bold mb-4">Categories</h1>
 
       {/* 🔥 Add Category */}
@@ -130,9 +121,9 @@ toast.error("Failed to delete category");
         </button>
       </div>
 
-      {/* 🔥 Edit Form */}
+      {/*  Edit Form */}
       {editCategory && (
-        <div className="mb-4 p-4 border rounded bg-gray-100">
+        <div className="mb-4 p-4 border rounded bg-gray-200">
           <h2 className="mb-2 font-bold">Edit Category</h2>
 
           <input
@@ -158,20 +149,20 @@ toast.error("Failed to delete category");
         </div>
       )}
 
-      {/* 🔥 Category List */}
-      <table className="w-full border">
+      {/*  Category List */}
+      <table className="w-full  border border-collapse">
         <thead>
-          <tr className="bg-gray-200 pb-10">
+          <tr className="bg-gray-200 pb-10  ">
             
-            <th className="p-3 text-left">Name</th>
+            <th className="p-3 text-center">Name</th>
             <th className="p-3 text-center">Actions</th>
           </tr>
         </thead>
 
-        <tbody>
+        <tbody >
           {Array.isArray(categories) &&
             categories.map((cat) => (
-              <tr key={cat.id} className="text-center border-t ">
+              <tr key={cat.id} className="text-center border border-gray-300">
                 
                 <td>{cat.name}</td>
                 <td className="space-x-2 p-7">
@@ -184,8 +175,8 @@ toast.error("Failed to delete category");
 
                   <button
                     onClick={() => handleDelete(cat.id)}
-                    className="bg-red-500 text-white px-2 py-1 rounded"
-                  >
+
+                    className="bg-gray-400 px-2 py-1 rounded"                  >
                     Delete
                   </button>
                 </td>

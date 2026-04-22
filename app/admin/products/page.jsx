@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dialog";
 
 
-
 const PAGE_SIZE = 6;
 
 export default function AdminProducts() {
@@ -80,7 +79,10 @@ const [editId, setEditId] = useState(null);
   useEffect(() => {
     fetchCategories();
   }, []);
-
+const getCategoryName = (id) => {
+  const category = categories.find((cat) => cat.id === id);
+  return category ? category.name : "N/A";
+};
   // Refetch products when search, filter, or page changes
   useEffect(() => {
     fetchProducts(page);
@@ -251,7 +253,7 @@ const handleAddNew = () => {
               <TableRow>
                 <TableHead>Image</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>category_id</TableHead>
+                <TableHead>category</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
                 <TableHead>Actions</TableHead>
@@ -270,7 +272,7 @@ const handleAddNew = () => {
                     )}
                   </TableCell>
                   <TableCell>{p.name}</TableCell>
-                  <TableCell>{p.category_id}</TableCell>
+                  <TableCell>{getCategoryName(p.category_id)}</TableCell>
                   <TableCell>₹{p.price}</TableCell>
                   <TableCell className={p.stock < 5 ? "text-red-500 font-bold" : ""}>{p.stock}</TableCell>
                   <TableCell className="flex gap-2">

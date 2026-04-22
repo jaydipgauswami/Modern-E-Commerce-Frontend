@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 const API_URL = "http://localhost:5000/api/admin/users";
 
@@ -26,6 +27,15 @@ export default function UsersPage() {
 
   const [loading, setLoading] = useState(false);
 
+  const handleAuthError = (res) => {
+  if (res.status === 401) {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+    return true;
+  }
+  return false;
+};
+
   // 🔹 Fetch Users
   const fetchUsers = async () => {
     try {
@@ -38,6 +48,7 @@ export default function UsersPage() {
         Authorization: `Bearer ${token}`,
       },
       });
+      if (handleAuthError(res)) return;
       const data = await res.json();
         if (!res.ok) {
       throw new Error(data.message || "Failed to fetch users");
@@ -117,6 +128,8 @@ export default function UsersPage() {
       },
       body: JSON.stringify(form),
     });
+      if (handleAuthError(res)) return;
+
 
     const data = await res.json();
 
@@ -144,6 +157,8 @@ const updateUser = async () => {
       },
       body: JSON.stringify(form),
     });
+      if (handleAuthError(res)) return;
+
 
     const data = await res.json();
 
@@ -179,6 +194,8 @@ const handleSubmit = (e) => {
         Authorization: `Bearer ${token}`,
       },
     });
+      if (handleAuthError(res)) return;
+
 
     const data = await res.json();
 
@@ -192,6 +209,36 @@ const handleSubmit = (e) => {
 
   } catch (err) {
     toast.error(  err.message || "Delete failed" );
+  }
+};
+const handleBlockUser = async (user) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(
+      `http://localhost:5000/api/users/${user.id}/block`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          is_blocked: !user.is_blocked, // toggle
+        }),
+      }
+    );
+     if (handleAuthError(res)) return;
+
+    const data = await res.json();
+     if (!res.ok) {
+      throw new Error(data.message || "Unauthorized or failed");
+    }
+
+    toast.success("User Blocked successfully");
+    fetchUsers();
+  } catch (error) {
+     toast.error(  err.message || "Blocked  failed" );
   }
 };
 
@@ -216,10 +263,12 @@ const handleSubmit = (e) => {
         action: "delete",
       }),
     });
+      if (handleAuthError(res)) return;
+
 
     const data = await res.json();
 
-    // 🔥 IMPORTANT: check response
+    //  IMPORTANT: check response
     if (!res.ok) {
       throw new Error(data.message || "Bulk delete failed");
     }
@@ -245,7 +294,7 @@ const handleSubmit = (e) => {
           }
         : {
             Active: "bg-green-100 text-green-700",
-            Inactive: "bg-gray-200 text-gray-700",
+           inactive: "bg-gray-300 text-gray-700",
             Blocked: "bg-red-100 text-red-600",
           };
 
@@ -258,7 +307,7 @@ const handleSubmit = (e) => {
       {/* 🔹 Top Bar */}
       <div className="bg-white p-4 rounded-2xl shadow flex flex-col md:flex-row gap-3 justify-between">
         <input
-          className="border p-2 rounded-lg w-full md:w-1/3"
+          className="border border-gray-300 p-2 rounded-lg w-full md:w-1/3"
           placeholder="Search name or email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -300,11 +349,11 @@ const handleSubmit = (e) => {
       )}
 
       {/* 🔹 Table */}
-      <div className="mt-4 overflow-x-auto bg-white rounded-2xl shadow">
+      <div className="mt-4 overflow-x-auto bg-white rounded- shadow">
         <table className="w-full min-w-800px">
           <thead className="bg-gray-100 sticky top-0">
 
-            <tr>
+            <tr className="border border-gray-300">
                   <th className="p-3 w-10"></th>
               <th className="p-3 text-left">Name</th>
               <th className="p-3 text-left">Email</th>
@@ -318,7 +367,7 @@ const handleSubmit = (e) => {
 
           <tbody>
             {filteredUsers.map((u) => (
-              <tr key={u.id} className="border-t hover:bg-gray-50">
+              <tr key={u.id} className=" border border-gray-300">
                 <td className="p-3">
                   <input
                     type="checkbox"
@@ -335,13 +384,18 @@ const handleSubmit = (e) => {
                 <td className="p-3 text-center">{badge("status", u.status)}</td>
 
                 <td className="p-3 flex gap-2 justify-end">
-                  <button onClick={() => openEditModal(u)} className="text-blue-600 ">
+                  <Button onClick={() => openEditModal(u)}>
                     Edit
-                  </button>
-                  <button onClick={() => deleteUser(u.id)} className="text-red-600">
+                  </ Button>
+                  < Button onClick={() => deleteUser(u.id)} className="text-red-500  ">
                     Delete
-                  </button>
+                  </ Button>
+                    <Button onClick={() => handleBlockUser(u)}>
+  {u.is_blocked ? "Unblock" : "Block"}
+</Button>
+                
                 </td>
+                
               </tr>
             ))}
           

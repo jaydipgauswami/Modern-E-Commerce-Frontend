@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Input } from "@/component/ui/input"
+import {Input} from "../../components/ui/input";
 import { toast } from "sonner";
-
+import { useRouter } from "next/navigation";
 
 
 
@@ -13,23 +13,32 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+
       const res = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
-
-     
-
-
       const data = await res.json();
-
      if (res.ok) {
-  toast.success(" Registration successful! Please login.");
+                 const token = data.accessToken || data.token;
+
+      const role = data?.user?.role || "user";
+        localStorage.setItem("token", token);
+        localStorage.setItem("role", role);
+  toast.success(" Registration successful!.");
+   
+
+if (role === "admin") {
+  router.push("/dashboard");
+} else {
+  router.push("/");
+}
 } else {
   toast.error(data.message || "Something went wrong");
 }

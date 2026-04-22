@@ -53,17 +53,20 @@ const { login } = useAuth();
         throw new Error(data.message || "Login failed");
       }
       // Save JWT + User
-          localStorage.setItem("token", data.accessToken);
+          const token = data.accessToken || data.token;
+          localStorage.setItem("token", token);
+        localStorage.setItem("role", data.user.role);
       localStorage.setItem("user", JSON.stringify(data.user));
       login(data.user);
-      toast.success("Login successful",{duration:"1000"});
-      setTimeout(() => {
-  if (data.user.role === "admin") {
-    router.push("/admin/dashboard");
-  } else {
-    router.push("/");
-  }
-}, 300);
+  toast.success("Login successful", { duration: 1000 });
+
+     if (data.user.role === "admin") {
+      router.push("/admin/dashboard");
+    } else {
+      router.push("/");
+    }
+
+     
     } catch (err) {
       toast.error(err.message);
     } finally {

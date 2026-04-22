@@ -89,34 +89,8 @@ const { user: authUser, logout } = useAuth();
         <ul className="hidden md:flex gap-8 items-center font-medium">
           <li className="cursor-pointer hover:text-gray-500"><Link href="/">Home</Link></li>
        
-<li
-  className="cursor-pointer hover:text-gray-500 relative"
-  onMouseEnter={() => setDropdownOpen(true)}
-  onMouseLeave={() => setTimeout(() => setDropdownOpen(false), 50)}
->
-  Products
-  {dropdownOpen && (
-    <div className="absolute top-full left-0 bg-white shadow-lg border border-gray-200 mt-0 p-4 w-48 z-50">
-      <ul className="space-y-2">
-        <li>
-          <Link href="/products/electronics"
-             className="hover:text-blue-600 block">  Electronics
-          </Link>
-        </li>
-        <li>
-          <Link href="/products/clothing"
-             className="hover:text-blue-600 block">Clothing & Fashion
-          </Link>
-        </li>
-        <li>
-          <Link href="/products/beauty"
-             className="hover:text-blue-600 block">Beauty & Health
-          </Link>
-        </li>
-      </ul>
-    </div>
-  )}
-</li>
+          <li className="cursor-pointer hover:text-gray-500"><Link href="/products">Products</Link></li>
+
           <li className="cursor-pointer hover:text-gray-500"> <Link href="/cart">Cart</Link></li>
 
        

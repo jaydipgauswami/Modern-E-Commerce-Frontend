@@ -2,16 +2,24 @@
 
 import Link from "next/link";
 import { FaBox, FaUsers, FaShoppingCart, FaChartLine } from "react-icons/fa";
-import { useState } from "react";
+import { useState , useEffect} from "react";
+import { useAuth } from "../../context/AuthContext";
 
 export default function AdminDashboard() {
+  const { user, loading } = useAuth();
   // Dummy products for testing
   const [products] = useState([
     { id: 1, name: "Product 1" },
     { id: 2, name: "Product 2" },
     { id: 3, name: "Product 3" },
   ]);
-
+ useEffect(() => {
+  if (!loading) {
+    if (!user || user.role !== "admin") {
+      router.push("/");
+    }
+  }
+}, [user, loading]);
   const lastProduct = products[products.length - 1];
 
   return (

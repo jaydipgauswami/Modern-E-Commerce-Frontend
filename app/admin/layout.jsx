@@ -1,5 +1,9 @@
+"use client";
 import Link from "next/link";
 import { FaChartLine, FaBox, FaShoppingCart, FaUsers , FaThLarge } from "react-icons/fa";
+import { useEffect} from "react";
+import { useRouter} from "next/navigation";
+
 
 const SidebarLink = ({ href, icon, label }) => {
   return (
@@ -14,6 +18,16 @@ const SidebarLink = ({ href, icon, label }) => {
 };
 
 export default function AdminLayout({ children }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    //  agar token nahi hai → login
+    if (!token) {
+      router.push("/login");
+    }
+  }, []);
   return (
     <div className="flex h-screen mt-20">
 
