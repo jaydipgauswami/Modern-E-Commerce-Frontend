@@ -38,7 +38,7 @@ export default function RootLayout({
          <CartProvider>
  <Navbar /> 
  <Toaster position="top-right" /> 
-       <main className="grow">{children}</main>
+       <main className="grow mt-20 ">{children}</main>
        <Footer />
          </CartProvider>
          </AuthProvider>

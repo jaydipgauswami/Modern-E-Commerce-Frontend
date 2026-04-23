@@ -4,8 +4,7 @@ import Link from "next/link"
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { useAuth } from "../app/context/AuthContext";
-
+import { useAuth } from "@/app/context/AuthContext";
 
 
 

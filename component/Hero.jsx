@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 export default function Hero() {
    const router = useRouter();
   return (
-    <section className="h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 via-white to-gray-200 overflow-hidden">
+    <section className=" flex items-center justify-center bg-gradient from-gray-100 via-white to-gray-200 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
 
         {/* Left Content */}

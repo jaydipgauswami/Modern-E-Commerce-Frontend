@@ -41,24 +41,26 @@ export default function Sidebar({ selectedCategory, setSelectedCategory }) {
       {/* 🔹 Sidebar */}
      <div
   className={`
-    fixed md:sticky top-0 left-0 h-screen w-64 bg-white z-50
-    transform transition-transform duration-300
-    ${open ? "translate-x-0" : "-translate-x-full"}
-    md:translate-x-0 border-r
-  `}
+  w-64  bg-white border-r
+  transform transition-transform duration-300
+  ${open ? "translate-x-0" : "-translate-x-full"}
+  md:translate-x-0 md:relative  flex flex-col
+`}  
 >
         {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="font-bold text-lg">Categories</h2>
+       <div className="flex justify-between items-center p-4 border-b">
+    <h2 className="font-bold text-lg">
+      Categories
+    </h2>
 
-          {/* Close button (mobile) */}
-          <button
-            className="md:hidden"
-            onClick={() => setOpen(false)}
-          >
-            ✕
-          </button>
-        </div>
+    {/* ONLY MOBILE BUTTON */}
+    <button
+      className="md:hidden"
+      onClick={() => setOpen(false)}
+    >
+      ✕
+    </button>
+  </div>
 
         {/* Category List */}
         <ul className="p-3 space-y-2">

@@ -36,7 +36,7 @@ import { motion } from "framer-motion";
   ];
 
   return (
-    <section className="p-10 bg-gray-50">
+    <section className="p-10 bg-gray-50 mt-10">
       <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">
         Shop by Category
       </h2>

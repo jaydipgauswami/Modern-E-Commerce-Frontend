@@ -23,7 +23,7 @@ export default function ProductsPage() {
         
         {/* Header */}
         <div className="p-4 border-b bg-white flex justify-between items-center">
-          <h1 className="text-xl font-semibold">Products</h1>
+          <h1 className="text-2xl font-semibold">Products</h1>
         </div>
 
         {/* Product List */}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/app/context/CartContext";
+import { motion } from "framer-motion";
 
 export default function ProductList({ selectedCategory }) {
   const [products, setProducts] = useState([]);
@@ -36,64 +37,75 @@ export default function ProductList({ selectedCategory }) {
       : products.filter(
           (p) => Number(p.category_id) === Number(selectedCategory)
         );
+return (
+  
+<motion.div
+  initial="hidden"
+  animate="show"
+  variants={{
+    hidden: {},
+    show: {
+      transition: {
+        staggerChildren: 0.08
+      }
+    }
+  }}
+  className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+>
+  
+  {filtered.map((p) => (
+    <motion.div
+      key={p.id}
+      variants={{
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0 }
+      }}
+      whileHover={{ scale: 1.03 }}
+      transition={{ duration: 1.0 }}
+      className="bg-white border rounded-xl shadow-sm hover:shadow-xl overflow-hidden"
+    >
+      
 
-  return (
- <div className="p-4">
-      {/* Loading */}
-      {loading && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="border p-3 rounded animate-pulse">
-              <div className="h-40 bg-gray-200 rounded"></div>
-              <div className="h-4 bg-gray-200 mt-2"></div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Image */}
+      <div
+        onClick={() => router.push(`/products/${p.id}`)}
+        className="cursor-pointer w-full h-40 overflow-hidden"
+      >
+        <motion.img
+          whileHover={{ scale: 1.1 }}
+          transition={{ duration: 0.4 }}
+          src={`http://localhost:5000/uploads/${p.image}`}
+          className="w-full h-44 object-cover"
+        />
+      </div>
 
-      {/* Empty */}
-      {!loading && filtered.length === 0 && (
-        <p className="text-center text-gray-500">No products found</p>
-      )}
+      {/* Content */}
+      <div className="p-3">
 
-      {/* Grid */}
-      {!loading && filtered.length > 0 && (
-        <div className="grid grid-cols-sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filtered.map((p) => (
-            <div
-              key={p.id}
-              className="border rounded-xl p-3 shadow-sm hover:shadow-md transition"
-            >
-              {/* Click → detail page */}
-              <div
-                onClick={() => router.push(`/products/${p.id}`)}
-                className="cursor-pointer"
-              >
-                <div className="h-40 bg-gray-100 rounded overflow-hidden">
-                  <img
-                    src={`http://localhost:5000/uploads/${p.image}`}
-                    className="w-full h-full object-cover hover:scale-105 transition"
-                  />
-                </div>
+        <h3 className="font-semibold text-sm line-clamp-2 min-h-40px">
+          {p.name}
+        </h3>
 
-                <h3 className="mt-2 font-semibold text-sm line-clamp-2">
-                  {p.name}
-                </h3>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-green-600 font-bold mt-1"
+        >
+          ₹{p.price}
+        </motion.p>
 
-                <p className="text-gray-500 text-sm">₹{p.price}</p>
-              </div>
+        {/* Button */}
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => addToCart(p, 1)}
+          className="mt-3 w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition text-sm"
+        >
+          Add to Cart
+        </motion.button>
 
-              {/* Actions */}
-              <button
-                onClick={() => addToCart(p, 1)}
-                className="mt-3 w-full bg-black text-white py-1.5 rounded hover:bg-gray-800 text-sm"
-              >
-                Add to Cart
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+      </div>
+    </motion.div>
+  ))}
+</motion.div>
+);
 }
