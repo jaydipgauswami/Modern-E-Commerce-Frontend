@@ -285,20 +285,21 @@ const handleAddNew = () => {
           </Table>
 
           {/* Pagination */}
-          <div className="flex justify-center items-center gap-2 mt-4">
-            <Button onClick={() => {
-  if (page > 1) {
-    setPage(prev => prev - 1);
-  }
-}} disabled={page === 1}>Prev</Button>
-
-           <Button
-    onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
-    disabled={page === totalPages}
-  >
-    Next
-  </Button>
-          </div>
+         <div className="flex justify-center items-center gap-2 mt-4">
+  {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+    <button
+      key={num}
+      onClick={() => setPage(num)}
+      className={`px-3 py-1 border rounded ${
+        page === num
+          ? "bg-indigo-600 text-white"
+          : "bg-white text-black"
+      }`}
+    >
+      {num}
+    </button>
+  ))}
+</div>
         </CardContent>
       </Card>
 

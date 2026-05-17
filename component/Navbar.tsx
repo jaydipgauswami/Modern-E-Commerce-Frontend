@@ -5,8 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/app/context/AuthContext";
-
-
+import { ShoppingCartOutlined, HeartOutlined, UserOutlined } from "@ant-design/icons";
 
 function Navbar() {
 const { user: authUser, logout } = useAuth();
@@ -28,7 +27,6 @@ const { user: authUser, logout } = useAuth();
   const handleScroll = () => {
     setScrolled(window.scrollY > 50);
   };
-
   window.addEventListener("scroll", handleScroll);
 
   return () => window.removeEventListener("scroll", handleScroll);
@@ -70,81 +68,81 @@ const { user: authUser, logout } = useAuth();
          "bg-white shadow-md"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-        
-        {/* Logo */}
-        <h1 className="text-2xl font-bold">QuickCart</h1>
+   <div className="w-full bg-white shadow px-6 py-3">
+  <div className="flex items-center justify-between">
 
+    {/* LEFT - LOGO */}
+    <div className="text-2xl font-bold text-indigo-600">
+      <Link href="/">QuickCart</Link>
+    </div>
 
-          <div className="flex-1 flex justify-center">
-    <input
-      type="text"
-      placeholder="Search products..."
-      className="w-1/2 px-4 py-2 border rounded-lg"
-    />
-  </div>
+    {/* CENTER - SEARCH + LINKS */}
+    <div className="hidden md:flex items-center gap-8 flex-1 justify-center">
 
-        {/* Desktop Menu */}
-        <ul className="hidden md:flex gap-8 items-center font-medium">
-          <li className="cursor-pointer hover:text-gray-500"><Link href="/">Home</Link></li>
-       
-          <li className="cursor-pointer hover:text-gray-500"><Link href="/products">Products</Link></li>
+      {/* SEARCH */}
+      <input
+        type="text"
+        placeholder="Search..."
+        className="w-80 border px-4 py-2 rounded-lg focus:outline-none"
+      />
 
-          <li className="cursor-pointer hover:text-gray-500"> <Link href="/cart">Cart</Link></li>
+      {/* NAV LINKS */}
+      <ul className="flex gap-6 font-medium">
+        <li><Link href="/" className="hover:text-gray-500">Home</Link></li>
+        <li><Link href="/products" className="hover:text-gray-500">Products</Link></li>
+        <li><Link href="/contact" className="hover:text-gray-500">Contact</Link></li>
+      </ul>
+    </div>
 
-       
-          <li className="cursor-pointer hover:text-gray-500"><Link href="/contact">Contact</Link></li>
+    {/* RIGHT - ICONS + ACTION */}
+    <div className="flex items-center gap-6">
 
-            {authUser?.role === "admin" && (
-    <Link
-      href="/admin/dashboard"
-      className="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-    >
-      Dashboard
-    </Link>
-  )}
-          
-  <div className="space-x-4">
-  {authUser ? (
-    <>
+      {/* Icons */}
+    <Link href="/wishlist">
+    <HeartOutlined className="text-black text-lg" />
+</Link>
+
+    <Link href="/cart">
+    <ShoppingCartOutlined className="text-black text-lg" />
+</Link>
+   <Link href="/profile">
+ 
+    <UserOutlined className="text-black text-lg" />
   
-      <button
-        onClick={handleLogout} // ya handleLogout agar tu extra logic use kar raha hai
-        className="text-white bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 transition"
-      >
-        Logout
-      </button>
-    </>
-  ) : (
-    <>
-      <Link
-        href="/login"
-        className="text-gray-700 hover:text-indigo-600 font-medium"
-      >
-        Login
-      </Link>
-
-      <Link
-        href="/register"
-        className="text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
-      >
-        Register
-      </Link>
-    </>
-  )}
-</div>  </ul>
-  
-        {/* Hamburger */}
-        <div
-          className="md:hidden cursor-pointer"
-          onClick={() => setIsOpen(!isOpen)}
+</Link>
+      {/* Admin Dashboard */}
+      {authUser?.role === "admin" && (
+        <Link
+          href="/admin/dashboard"
+          className="px-3 py-2 bg-gray-500 text-white rounded-lg text-sm"
         >
-          <div className="w-6 h-0.5 bg-black mb-1"></div>
-          <div className="w-6 h-0.5 bg-black mb-1"></div>
-          <div className="w-6 h-0.5 bg-black"></div>
-        </div>
-      </div>
+          Dashboard
+        </Link>
+      )}
 
+      {/* Auth */}
+      {authUser ? (
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 text-white px-3 py-2 rounded-lg text-sm"
+        >
+          Logout
+        </button>
+      ) : (
+        <>
+          <Link href="/login" className="text-sm">Login</Link>
+          <Link
+            href="/register"
+            className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm"
+          >
+            Register
+          </Link>
+        </>
+      )}
+    </div>
+
+  </div>
+</div>
       {/* Mobile Menu */}
     {isOpen && (
   <div className="md:hidden bg-white shadow-md px-4 py-4 space-y-4">
@@ -165,13 +163,8 @@ const { user: authUser, logout } = useAuth();
               </div>
             )}
           </div>
-
-   
-
     <Link href="/cart" className="block py-2 hover:text-blue-600">Cart</Link>
-  
     <Link href="/contact" className="block py-2 hover:text-blue-600">Contact</Link>
-
    {authUser ? (
   <>
     {/* Admin Dashboard */}

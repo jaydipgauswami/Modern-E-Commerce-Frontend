@@ -22,9 +22,9 @@ export default function ProductsPage() {
      <div className="flex-1 md:ml-64">
         
         {/* Header */}
-        <div className="p-4 border-b bg-white flex justify-between items-center">
+        {/* <div className="p-4 border-b bg-white flex justify-between items-center">
           <h1 className="text-2xl font-semibold">Products</h1>
-        </div>
+        </div> */}
 
         {/* Product List */}
         <ProductList selectedCategory={selectedCategory} />

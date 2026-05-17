@@ -5,21 +5,15 @@ import {motion} from "framer-motion";
 
  function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
-
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     alert("Message Sent Successfully");
     setForm({ name: "", email: "", message: "" });
   };
-  
-
   return (
-
-    
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
       <div className="max-w-6xl w-full grid md:grid-cols-2 gap-8 bg-white p-6 md:p-10 rounded-2xl shadow-lg">
         
@@ -31,8 +25,7 @@ import {motion} from "framer-motion";
 >
   {  <div>
           <h2 className="text-3xl font-bold mb-6">Contact Us</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            
+          <form onSubmit={handleSubmit} className="space-y-4">  
             <input
               type="text"
               name="name"
