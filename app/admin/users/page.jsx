@@ -11,9 +11,7 @@ export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-
   const [selectedUsers, setSelectedUsers] = useState([]);
-
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState(null);
 
@@ -36,7 +34,7 @@ export default function UsersPage() {
   return false;
 };
 
-  // 🔹 Fetch Users
+  // Fetch Users
   const fetchUsers = async () => {
     try {
           const token = localStorage.getItem("token");
@@ -62,8 +60,7 @@ export default function UsersPage() {
   useEffect(() => {
     fetchUsers();
   }, []);
-
-  // 🔹 Filtered Users (UI only)
+  // Filtered Users (UI only)
  const filteredUsers = useMemo(() => {
   return users
     .filter((u) =>
@@ -75,19 +72,16 @@ export default function UsersPage() {
   return (u.role || "").trim().toLowerCase() === roleFilter.toLowerCase();
 })
     .filter((u) => {
-         
       if (statusFilter === "all") return true;
       return (u.status || "").toLowerCase() === statusFilter.toLowerCase();
     });
 }, [users, search, roleFilter, statusFilter]);
-
   //  Checkbox
   const toggleSelect = (id) => {
     setSelectedUsers((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
-
   const toggleSelectAll = () => {
     if (selectedUsers.length === filteredUsers.length) {
       setSelectedUsers([]);
@@ -95,14 +89,12 @@ export default function UsersPage() {
       setSelectedUsers(filteredUsers.map((u) => u.id));
     }
   };
-
   //  Open Add/Edit Modal
   const openAddModal = () => {
     setForm({ name: "", email: "", password: "", role: "User", status: "Active" });
     setEditId(null);
     setModalOpen(true);
   };
-
   const openEditModal = (user) => {
     setForm({
       name: user.name,
@@ -114,41 +106,32 @@ export default function UsersPage() {
     setEditId(user.id);
     setModalOpen(true);
   };
-
   // add user 
   const addUser = async () => {
   try {
     const token = localStorage.getItem("token");
-
     const res = await fetch(API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization : `Bearer ${token}`
       },
       body: JSON.stringify(form),
     });
       if (handleAuthError(res)) return;
-
-
     const data = await res.json();
-
-    if (!res.ok) throw new Error(data.message);
-
+    if (!res.ok) throw new Error(data.message);                
     toast.success("User created successfully");
     setModalOpen(false);
     fetchUsers();
-  
   } catch (err) {
     toast.error(err.message || "Failed to create user");
   }
 };
 // update user 
-
 const updateUser = async () => {
   try {
     const token = localStorage.getItem("token");
-
     const res = await fetch(`${API_URL}/${editId}`, {
       method: "PUT",
       headers: {
@@ -158,17 +141,12 @@ const updateUser = async () => {
       body: JSON.stringify(form),
     });
       if (handleAuthError(res)) return;
-
-
     const data = await res.json();
-
     if (!res.ok) throw new Error(data.message);
-
     toast.success("User updated successfully");
     setModalOpen(false);
     setEditId(null);
     fetchUsers();
-
   } catch (err) {
     toast.error(err.message || "Failed to update user");
   }
@@ -186,7 +164,6 @@ const handleSubmit = (e) => {
   const deleteUser = async (id) => {
   try {
     const token = localStorage.getItem("token");
-
     const res = await fetch(`${API_URL}/${id}`, {
       method: "DELETE",
       headers: {
@@ -195,8 +172,6 @@ const handleSubmit = (e) => {
       },
     });
       if (handleAuthError(res)) return;
-
-
     const data = await res.json();
 
     //  IMPORTANT: check response
@@ -229,16 +204,14 @@ const handleBlockUser = async (user) => {
       }
     );
      if (handleAuthError(res)) return;
-
     const data = await res.json();
      if (!res.ok) {
       throw new Error(data.message || "Unauthorized or failed");
     }
-
     toast.success("User Blocked successfully");
     fetchUsers();
   } catch (error) {
-     toast.error(  err.message || "Blocked  failed" );
+     toast.error(  error.message || "Blocked  failed" );
   }
 };
 

@@ -12,7 +12,6 @@ export default function CategoriesPage() {
 const [editName, setEditName] = useState("");
 
 
-   
   useEffect(() => {
   apiFetch("http://localhost:5000/api/catagories")
     .then(data => {
@@ -104,7 +103,7 @@ const fetchCategories = async () => {
     <div className="p-6 ">
       <h1 className="text-2xl font-bold mb-4">Categories</h1>
 
-      {/* 🔥 Add Category */}
+      {/*  Add Category */}
       <div className="flex gap-2 mb-4">
         <input
           type="text"

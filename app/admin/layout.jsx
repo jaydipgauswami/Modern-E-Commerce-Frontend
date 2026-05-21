@@ -51,7 +51,6 @@ export default function AdminLayout({ children }) {
             icon={<FaBox />}
             label="Products"
           />
-
              <SidebarLink
             href="/admin/Category"
             icon={ <FaThLarge /> }

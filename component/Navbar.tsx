@@ -105,7 +105,7 @@ const { user: authUser, logout } = useAuth();
     <Link href="/cart">
     <ShoppingCartOutlined className="text-black text-lg" />
 </Link>
-   <Link href="/profile">
+   <Link href="/account">
  
     <UserOutlined className="text-black text-lg" />
   
