@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/app/context/AuthContext";
 import { ShoppingCartOutlined, HeartOutlined, UserOutlined } from "@ant-design/icons";
-
+import { Badge } from "antd";
+import { useCart } from "../app/context/CartContext";
 function Navbar() {
 const { user: authUser, logout } = useAuth();
  const router = useRouter();
@@ -15,7 +16,7 @@ const { user: authUser, logout } = useAuth();
   name: string;
 };
   const [user, setUser] = useState<User | null>(null);
-  
+  const { cartItems , wishlistItems } = useCart();
 
   const [isOpen, setIsOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -98,13 +99,17 @@ const { user: authUser, logout } = useAuth();
     <div className="flex items-center gap-6">
 
       {/* Icons */}
+         <Badge count={wishlistItems.length} >
     <Link href="/wishlist">
     <HeartOutlined className="text-black text-lg" />
 </Link>
+  </Badge>
 
-    <Link href="/cart">
+   <Badge count={cartItems.length} showZero>
+  <Link href="/cart">
     <ShoppingCartOutlined className="text-black text-lg" />
-</Link>
+  </Link>
+</Badge>
    <Link href="/account">
  
     <UserOutlined className="text-black text-lg" />
@@ -152,7 +157,7 @@ const { user: authUser, logout } = useAuth();
               onClick={() => setProductOpen(!productOpen)}
               className="w-full text-left"
             >
-              Products ⬇
+              Products 
             </button>
 
             {productOpen && (

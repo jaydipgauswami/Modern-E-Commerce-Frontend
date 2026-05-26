@@ -4,34 +4,43 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import {
-  FaUserCircle,
-  FaEnvelope,
-  FaPhone,
-  FaMapMarkerAlt,
-  FaGlobe,
-  FaMapPin,
-  FaBirthdayCake,
-  FaUserEdit,
-} from "react-icons/fa";
+  Card,
+  Row,
+  Col,
+  Avatar,
+  Typography,
+  Button,
+  Space,
+  Spin,
+} from "antd";
+
+import {
+  UserOutlined,
+  EditOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  EnvironmentOutlined,
+  GlobalOutlined,
+  CalendarOutlined,
+  NumberOutlined,
+} from "@ant-design/icons";
+
+const { Title, Text } = Typography;
 
 export default function ProfilePage() {
-
   const [user, setUser] = useState(null);
 
   const [loading, setLoading] = useState(true);
 
   // Fetch Profile
   const fetchProfile = async () => {
-
     try {
-
       const token = localStorage.getItem("token");
 
       const res = await fetch(
         "http://localhost:5000/api/users/me",
         {
           method: "GET",
-
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -45,13 +54,9 @@ export default function ProfilePage() {
       }
 
       setUser(data.user);
-
     } catch (error) {
-
       console.log("Profile Error:", error.message);
-
     } finally {
-
       setLoading(false);
     }
   };
@@ -60,206 +65,215 @@ export default function ProfilePage() {
     fetchProfile();
   }, []);
 
-  // Loading State
+  // Loading
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <h1 className="text-xl font-semibold">
-          Loading Profile...
-        </h1>
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          background: "#f5f5f5",
+        }}
+      >
+        <Spin size="large" />
       </div>
     );
   }
 
+  const profileData = [
+    {
+      title: "First Name",
+      value: user?.first_name || "N/A",
+      icon: <UserOutlined />,
+    },
+    {
+      title: "Last Name",
+      value: user?.last_name || "N/A",
+      icon: <UserOutlined />,
+    },
+    {
+      title: "Email",
+      value: user?.email || "N/A",
+      icon: <MailOutlined />,
+    },
+    {
+      title: "Date of Birth",
+      value: user?.dob || "N/A",
+      icon: <CalendarOutlined />,
+    },
+    {
+      title: "Phone",
+      value: user?.phone || "N/A",
+      icon: <PhoneOutlined />,
+    },
+    {
+      title: "Pincode",
+      value: user?.pincode || "N/A",
+      icon: <NumberOutlined />,
+    },
+    {
+      title: "State",
+      value: user?.state || "N/A",
+      icon: <EnvironmentOutlined />,
+    },
+    {
+      title: "Country",
+      value: user?.country || "N/A",
+      icon: <GlobalOutlined />,
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-
-      <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-lg overflow-hidden">
-
+    <div
+      style={{
+        height: "100vh",
+        overflow: "hidden",
+        background: "#f5f5f5",
+        padding: "16px",
+      }}
+    >
+      <Card
+        variant="borderless"
+  style={{
+    height: "100%",
+    borderRadius: "20px",
+    overflow: "hidden",
+  }}
+  styles={{
+    body: {
+      padding: 0,
+      height: "100%",
+      display: "flex",
+      flexDirection: "column",
+    },
+  }}
+      >
         {/* Header */}
-        <div className="bg-indigo-600 p-5 text-white flex flex-col md:flex-row items-center justify-between gap-6">
-
-          <div className="flex items-center gap-5">
-
-            <div className="w-28 h-28 rounded-full overflow-hidden bg-white flex items-center justify-center border-4 border-white shadow-md">
-
-              {user?.image ? (
-                <img
-                  src={user.image}
-                  alt="profile"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <FaUserCircle className="text-7xl text-gray-400" />
-              )}
-
-            </div>
+        <div
+          style={{
+            background: "#1677ff",
+            padding: "10px 30px",
+            color: "#fff",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "20px",
+          }}
+        >
+          <Space size={20}>
+            <Avatar
+              size={50}
+              src={user?.image}
+              icon={<UserOutlined />}
+            />
 
             <div>
+              <Title
+                level={3}
+                style={{
+                  color: "#fff",
+                  margin: 0,
+                }}
+              >
+                {user?.first_name || user?.name || "User"}
+              </Title>
 
-              {user?.first_name || user?.name}
-
-              <p className="text-indigo-100 mt-1">
+              <Text style={{ color: "#dbeafe" }}>
                 {user?.email}
-              </p>
-
+              </Text>
             </div>
-          </div>
+          </Space>
 
-          <Link
-            href="/account/profile/editprofile"
-            className="flex items-center gap-2 bg-white text-indigo-600 px-5 py-3 rounded-xl font-medium hover:bg-gray-100 transition"
-          >
-            <FaUserEdit />
-            Edit Profile 
+          <Link href="/account/profile/editprofile">
+            <Button
+              type="primary"
+              size="large"
+              icon={<EditOutlined />}
+            >
+              Edit Profile
+            </Button>
           </Link>
         </div>
-        {/* Details Section */}
-        <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* First Name */}
-          <div className="border rounded-2xl p-5 bg-gray-50">
-            <p className="text-gray-500 text-sm mb-1">
-              First Name
-            </p>
-            <h3 className="font-semibold text-lg">
-              {user?.first_name || "N/A"}
-            </h3>
-          </div>
 
-          {/* Last Name */}
-          <div className="border rounded-2xl p-5 bg-gray-50">
-            <p className="text-gray-500 text-sm mb-1">
-              Last Name
-            </p>
+        {/* Content */}
+        <div
+          style={{
+            flex: 1,
+            padding: "20px",
+            overflow: "hidden",
+          }}
+        >
+          <Row gutter={[16, 16]}>
+            {profileData.map((item, index) => (
+              <Col xs={24} md={12} key={index}>
+                <Card
+                   variant="borderless"
+                  style={{
+                    borderRadius: "16px",
+                    background: "#fafafa",
+                    height: "100%",
+                  }}
+                >
+                  <Space align="start">
+                    <div
+                      style={{
+                        fontSize: "20px",
+                        marginTop: "5px",
+                      }}
+                    >
+                      {item.icon}
+                    </div>
 
-            <h3 className="font-semibold text-lg">
-              {user?.last_name || "N/A"}
-            </h3>
-          </div>
+                    <div>
+                      <Text type="secondary">
+                        {item.title}
+                      </Text>
 
-          {/* Email */}
-          <div className="border rounded-2xl p-5 bg-gray-50 flex items-start gap-3">
+                      <Title
+                        level={5}
+                        style={{
+                          marginTop: "5px",
+                          marginBottom: 0,
+                        }}
+                      >
+                        {item.value}
+                      </Title>
+                    </div>
+                  </Space>
+                </Card>
+              </Col>
+            ))}
 
-            <FaEnvelope className="text-indigo-600 text-xl mt-1" />
+            {/* Address */}
+            <Col span={24}>
+              <Card
+                variant="borderless"
+                style={{
+                  borderRadius: "16px",
+                  background: "#fafafa",
+                }}
+              >
+                <Text type="secondary">
+                  Address
+                </Text>
 
-            <div>
-
-              <p className="text-gray-500 text-sm mb-1">
-                Email
-              </p>
-
-              <h3 className="font-semibold">
-                {user?.email || "N/A"}
-              </h3>
-
-            </div>
-          </div>
-
-          {/* DOB */}
-          <div className="border rounded-2xl p-5 bg-gray-50 flex items-start gap-3">
-
-            <FaBirthdayCake className="text-indigo-600 text-xl mt-1" />
-
-            <div>
-
-              <p className="text-gray-500 text-sm mb-1">
-                Date of Birth
-              </p>
-
-              <h3 className="font-semibold">
-                {user?.dob || "N/A"}
-              </h3>
-
-            </div>
-          </div>
-
-          {/* Phone */}
-          <div className="border rounded-2xl p-5 bg-gray-50 flex items-start gap-3">
-
-            <FaPhone className="text-indigo-600 text-xl mt-1" />
-
-            <div>
-
-              <p className="text-gray-500 text-sm mb-1">
-                Phone
-              </p>
-
-              <h3 className="font-semibold">
-                {user?.phone || "N/A"}
-              </h3>
-
-            </div>
-          </div>
-
-          {/* Pincode */}
-          <div className="border rounded-2xl p-5 bg-gray-50 flex items-start gap-3">
-
-            <FaMapPin className="text-indigo-600 text-xl mt-1" />
-
-            <div>
-
-              <p className="text-gray-500 text-sm mb-1">
-                Pincode
-              </p>
-
-              <h3 className="font-semibold">
-                {user?.pincode || "N/A"}
-              </h3>
-
-            </div>
-          </div>
-
-          {/* State */}
-          <div className="border rounded-2xl p-5 bg-gray-50 flex items-start gap-3">
-
-            <FaMapMarkerAlt className="text-indigo-600 text-xl mt-1" />
-
-            <div>
-
-              <p className="text-gray-500 text-sm mb-1">
-                State
-              </p>
-
-              <h3 className="font-semibold">
-                {user?.state || "N/A"}
-              </h3>
-
-            </div>
-          </div>
-
-          {/* Country */}
-          <div className="border rounded-2xl p-5 bg-gray-50 flex items-start gap-3">
-
-            <FaGlobe className="text-indigo-600 text-xl mt-1" />
-
-            <div>
-
-              <p className="text-gray-500 text-sm mb-1">
-                Country
-              </p>
-
-              <h3 className="font-semibold">
-                {user?.country || "N/A"}
-              </h3>
-
-            </div>
-          </div>
-
-          {/* Address */}
-          <div className="md:col-span-2 border rounded-2xl p-5 bg-gray-50">
-
-            <p className="text-gray-500 text-sm mb-2">
-              Address
-            </p>
-
-            <h3 className="font-semibold text-lg leading-relaxed">
-              {user?.address || "N/A"}
-            </h3>
-
-          </div>
-
+                <Title
+                  level={5}
+                  style={{
+                    marginTop: "8px",
+                    marginBottom: 0,
+                  }}
+                >
+                  {user?.address || "N/A"}
+                </Title>
+              </Card>
+            </Col>
+          </Row>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

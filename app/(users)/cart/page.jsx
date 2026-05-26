@@ -8,6 +8,7 @@ function CartPage() {
   (acc, item) => acc + Number(item.price.toString().replace(/[^0-9.-]+/g, "")) * item.quantity,
   0
 );
+console.log(cartItems)
 
 
   return (
@@ -21,8 +22,11 @@ function CartPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-gray-500">Product</th>
+                <th className="px-6 py-3 text-center text-gray-500">product</th>
+              
+                <th className="px-6 py-3 text-left text-gray-500">Brand</th>
                 <th className="px-6 py-3 text-left text-gray-500">Price</th>
+                <th className="px-6 py-3 text-left text-gray-500">Description</th>
                 <th className="px-6 py-3 text-left text-gray-500">Quantity</th>
                 <th className="px-6 py-3 text-left text-gray-500">Total</th>
                 <th className="px-6 py-3 text-left text-gray-500">Action</th>
@@ -30,16 +34,20 @@ function CartPage() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {cartItems.map((item) => (
+                
                 <tr key={item.id}>
                   <td className="px-6 py-4 flex items-center gap-4">
                     <img
-                      src={item.img || item.image} // context me image ka key check karo
+                      src={`http://localhost:5000/uploads/${item.image}`} // context me image ka key check karo
                       alt={item.name}
                       className="h-16 w-16 object-cover rounded"
                     />
+                    
                     <span>{item.name}</span>
                   </td>
+                  <td className="px-6 py-4">{item.brand}</td>
                   <td className="px-6 py-4">{item.price}</td>
+                  <td className="px-6 py-4">{item.description}</td>
                   <td className="px-6 py-4">
                     <input
                       type="number"

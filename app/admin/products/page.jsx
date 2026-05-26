@@ -33,6 +33,8 @@ const [editId, setEditId] = useState(null);
     name: "",
     price: "",
     stock: "",
+      brand: "",
+  description: "",
     category_id: "",
     image: null
   });
@@ -101,6 +103,12 @@ const getCategoryName = (id) => {
     formData.append("name", form.name);
     formData.append("price", form.price);
     formData.append("stock", form.stock);
+       formData.append("brand", form.brand);
+
+    formData.append(
+      "description",
+      form.description
+    );
     formData.append("category_id", form.category_id);
 
     if (form.image) {
@@ -134,6 +142,8 @@ const getCategoryName = (id) => {
         name: "",
         price: "",
         stock: "",
+          brand: "",
+        description: "",
         category_id: "",
         image: null
       });
@@ -191,6 +201,8 @@ const handleAddNew = () => {
     name: "",
     price: "",
     stock: "",
+     brand: "",
+    description: "",
     category_id: "",
     image: null
   });
@@ -205,6 +217,9 @@ const handleAddNew = () => {
     name: product.name,
     price: product.price,
     stock: product.stock,
+     brand: product.brand || "",
+    description:
+      product.description || "",
     category_id: product.category_id,
     image: null
   });
@@ -253,9 +268,11 @@ const handleAddNew = () => {
               <TableRow>
                 <TableHead>Image</TableHead>
                 <TableHead>Name</TableHead>
+                   <TableHead>Brand</TableHead>
                 <TableHead>category</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
+                    <TableHead>Description</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -272,9 +289,15 @@ const handleAddNew = () => {
                     )}
                   </TableCell>
                   <TableCell>{p.name}</TableCell>
+                   <TableCell>
+        {p.brand || "N/A"}
+      </TableCell>
                   <TableCell>{getCategoryName(p.category_id)}</TableCell>
                   <TableCell>₹{p.price}</TableCell>
                   <TableCell className={p.stock < 5 ? "text-red-500 font-bold" : ""}>{p.stock}</TableCell>
+                    <TableCell className="w-50 truncate">
+        {p.description || "N/A"}
+      </TableCell>
                   <TableCell className="flex gap-2">
                     <Button onClick={() => handleEdit(p)}>Edit</Button>
                     <Button onClick={() => handleDelete(p.id)}>Delete</Button>
@@ -317,6 +340,16 @@ const handleAddNew = () => {
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
             <Input
+  placeholder="Brand Name"
+  value={form.brand}
+  onChange={(e) =>
+    setForm({
+      ...form,
+      brand: e.target.value,
+    })
+  }
+/>
+            <Input
               placeholder="Price"
               type="number"
               value={form.price}
@@ -328,6 +361,17 @@ const handleAddNew = () => {
               value={form.stock}
               onChange={(e) => setForm({ ...form, stock: e.target.value })}
             />
+            <textarea
+  placeholder="Product Description"
+  value={form.description}
+  onChange={(e) =>
+    setForm({
+      ...form,
+      description: e.target.value,
+    })
+  }
+  className="border rounded px-3 py-2 min-h-25"
+/>
 
             <select
               className="border rounded px-3 py-2"

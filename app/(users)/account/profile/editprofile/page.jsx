@@ -3,432 +3,418 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Toaster, toast } from "sonner";
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Row,
+  Col,
+  Avatar,
+  Typography,
+  Upload,
+  DatePicker,
+  message,
+  Space,
+} from "antd";
 
-import { FaUserCircle, FaCamera } from "react-icons/fa";
+import {
+  UserOutlined,
+  CameraOutlined,
+  SaveOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  EnvironmentOutlined,
+} from "@ant-design/icons";
+
+import dayjs from "dayjs";
+
+const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 export default function EditProfile() {
+  const router = useRouter();
 
-    const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-    const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
 
-    const [errors, setErrors] = useState({});
+  const [imagePreview, setImagePreview] = useState("");
 
-    const [form, setForm] = useState({
-        first_name: "",
-        last_name: "",
-        email: "",
-        dob: "",
-        phone: "",
-        address: "",
-        state: "",
-        country: "",
-        pincode: "",
-        image: "",
-        preview: "",
+  // Image Upload
+  const handleImage = (info) => {
+    const file = info.file.originFileObj;
+
+    if (!file) return;
+
+    const previewUrl = URL.createObjectURL(file);
+
+    setImagePreview(previewUrl);
+
+    form.setFieldsValue({
+      image: previewUrl,
     });
+  };
 
-    // Handle Change
-    const handleChange = (e) => {
+  // Submit
+  const handleSubmit = async (values) => {
+    try {
+      setLoading(true);
 
-        const { name, value } = e.target;
+      const token = localStorage.getItem("token");
 
-        setForm({
-            ...form,
-            [name]: value,
-        });
+      const payload = {
+        first_name: values.first_name || null,
+        last_name: values.last_name || null,
+        email: values.email || null,
+        dob: values.dob
+          ? dayjs(values.dob).format("YYYY-MM-DD")
+          : null,
+        phone: values.phone || null,
+        address: values.address || null,
+        state: values.state || null,
+        country: values.country || null,
+        pincode: values.pincode || null,
+        image: values.image || null,
+      };
 
-        // Remove Error While Typing
-        setErrors((prev) => ({
-            ...prev,
-            [name]: "",
-        }));
-    };
+      const res = await fetch(
+        "http://localhost:5000/api/users/update-profile",
+        {
+          method: "PUT",
 
-    // Handle Image
-    const handleImage = (e) => {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
 
-        const file = e.target.files?.[0];
-
-        if (!file) return;
-
-        const previewUrl = URL.createObjectURL(file);
-
-        setForm({
-            ...form,
-            image: previewUrl,
-            preview: previewUrl,
-        });
-    };
-
-    // Validation
-    const validateForm = () => {
-
-        const newErrors = {};
-
-        // First Name
-        if (!form.first_name.trim()) {
-            newErrors.first_name = "First name is required";
+          body: JSON.stringify(payload),
         }
-
-        // Last Name
-        if (!form.last_name.trim()) {
-            newErrors.last_name = "Last name is required";
-        }
-
-        // Email
-        if (!form.email.trim()) {
-
-            newErrors.email = "Email is required";
-
-        } else if (
-            !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(
-                form.email
-            )
-        ) {
-
-            newErrors.email = "Invalid email address";
-        }
-
-        // Phone
-        if (!form.phone.trim()) {
-
-            newErrors.phone = "Phone number is required";
-
-        } else if (!/^\d{10}$/.test(form.phone)) {
-
-            newErrors.phone =
-                "Phone number must be 10 digits";
-        }
-
-        // Pincode
-        if (
-            form.pincode &&
-            !/^\d{6}$/.test(form.pincode)
-        ) {
-
-            newErrors.pincode =
-                "Pincode must be 6 digits";
-        }
-
-        // DOB
-        if (form.dob) {
-
-            const today = new Date();
-
-            const selectedDate = new Date(form.dob);
-
-            if (selectedDate > today) {
-                newErrors.dob =
-                    "Future date is not allowed";
-            }
-        }
-
-        // Address
-        if (!form.address.trim()) {
-            newErrors.address = "Address is required";
-        }
-
-        // State
-        if (!form.state.trim()) {
-            newErrors.state = "State is required";
-        }
-
-        // Country
-        if (!form.country.trim()) {
-            newErrors.country = "Country is required";
-        }
-
-        setErrors(newErrors);
-
-        return Object.keys(newErrors).length === 0;
-    };
-
-    // Submit
-    const handleSubmit = async (e) => {
-
-        e.preventDefault();
-
-        // Validate First
-        const isValid = validateForm();
-
-        if (!isValid) {
-            toast.error("Please fix validation errors");
-            return;
-        }
-
-        try {
-
-            setLoading(true);
-
-            const token = localStorage.getItem("token");
-
-            const res = await fetch(
-                "http://localhost:5000/api/users/update-profile",
-                {
-                    method: "PUT",
-
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-
-                    body: JSON.stringify({
-                        first_name: form.first_name || null,
-                        last_name: form.last_name || null,
-                        dob: form.dob || null,
-                        phone: form.phone || null,
-                        address: form.address || null,
-                        state: form.state || null,
-                        country: form.country || null,
-                        pincode: form.pincode || null,
-                        image: form.image || null,
-                    }),
-                }
-            );
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(
-                    data.message || "Failed to update profile"
-                );
-            }
-
-            toast.success(
-                "Profile updated successfully"
-            );
-
-            router.push("/account/profile");
-
-        } catch (error) {
-
-            console.log("Update Error:", error.message);
-
-            toast.error(error.message);
-
-        } finally {
-
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="min-h-screen bg-gray-100 p-6">
-
-            <Toaster position="top-right" />
-
-            <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow">
-
-                <h1 className="text-2xl font-bold mb-6">
-                    Edit Profile
-                </h1>
-
-                <form
-                    onSubmit={handleSubmit}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                >
-
-                    {/* Image */}
-                    <div className="md:col-span-2 flex flex-col items-center gap-4">
-
-                        <label className="font-medium">
-                            Profile Image
-                        </label>
-
-                        <div className="relative w-28 h-28">
-
-                            <div className="w-full h-full rounded-full border flex items-center justify-center overflow-hidden bg-gray-100">
-
-                                {form.preview ? (
-                                    <img
-                                        src={form.preview}
-                                        alt="preview"
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <FaUserCircle className="text-6xl text-gray-400" />
-                                )}
-
-                            </div>
-
-                            <label className="absolute bottom-0 right-0 bg-indigo-600 text-white p-2 rounded-full cursor-pointer hover:bg-indigo-700 shadow-md">
-
-                                <FaCamera />
-
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleImage}
-                                    className="hidden"
-                                />
-                            </label>
-                        </div>
-                    </div>
-
-                    {/* First Name */}
-                    <div>
-                        <input
-                            name="first_name"
-                            placeholder="First Name"
-                            value={form.first_name}
-                            onChange={handleChange}
-                            className="border p-3 rounded-lg w-full"
-                        />
-
-                        {errors.first_name && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.first_name}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Last Name */}
-                    <div>
-                        <input
-                            name="last_name"
-                            placeholder="Last Name"
-                            value={form.last_name}
-                            onChange={handleChange}
-                            className="border p-3 rounded-lg w-full"
-                        />
-                        {errors.last_name && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.last_name}
-                            </p>
-                        )}
-                    </div>
-                    {/* Email */}
-                    <div>
-                        <input
-                            name="email"
-                            type="email"
-                            placeholder="Email"
-                            value={form.email}
-                            onChange={handleChange}
-                            className="border p-3 rounded-lg w-full"
-                        />
-                        {errors.email && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.email}
-                            </p>
-                        )}
-                    </div>
-                    {/* DOB */}
-                    <div>
-                        <input
-                            name="dob"
-                            type="date"
-                            value={form.dob}
-                            onChange={handleChange}
-                            className="border p-3 rounded-lg w-full"
-                        />
-                        {errors.dob && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.dob}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Phone */}
-                    <div>
-                        <input
-                            name="phone"
-                            placeholder="Phone Number"
-                            value={form.phone}
-                            onChange={handleChange}
-                            className="border p-3 rounded-lg w-full"
-                        />
-
-                        {errors.phone && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.phone}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Pincode */}
-                        <input
-                    <div>
-                            name="pincode"
-                            placeholder="Pincode"
-                            value={form.pincode}
-                            onChange={handleChange}
-                            className="border p-3 rounded-lg w-full"
-                        />
-
-                        {errors.pincode && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.pincode}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* State */}
-                    <div>
-                        <input
-                            name="state"
-                            placeholder="State"
-                            value={form.state}
-                            onChange={handleChange}
-                            className="border p-3 rounded-lg w-full"
-                        />
-
-                        {errors.state && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.state}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Country */}
-                    <div>
-                        <input
-                            name="country"
-                            placeholder="Country"
-                            value={form.country}
-                            onChange={handleChange}
-                            className="border p-3 rounded-lg w-full"
-                        />
-
-                        {errors.country && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.country}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Address */}
-                    <div className="md:col-span-2">
-
-                        <textarea
-                            name="address"
-                            placeholder="Address"
-                            value={form.address}
-                            onChange={handleChange}
-                            className="border p-3 rounded-lg w-full"
-                        />
-                        {errors.address && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.address}
-                            </p>
-                        )}
-                    </div>
-                    {/* Submit */}
-                    <div className="md:col-span-2 flex justify-end">
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700"
-                        >
-                            {loading
-                                ? "Saving..."
-                                : "Save Changes"}
-                        </button>
-                    </div>
-                </form>
-            </div>
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          data.message || "Failed to update profile"
+        );
+      }
+
+      message.success(
+        "Profile updated successfully"
+      );
+
+      router.push("/account/profile");
+    } catch (error) {
+      console.log("Update Error:", error.message);
+
+      message.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#f5f5f5",
+        padding: "24px",
+      }}
+    >
+      <Card
+        variant="borderless"
+        style={{
+          maxWidth: "1100px",
+          margin: "0 auto",
+          borderRadius: "24px",
+          boxShadow:
+            "0 10px 30px rgba(0,0,0,0.08)",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            marginBottom: "32px",
+            textAlign: "center",
+          }}
+        >
+          <Title level={2} style={{ marginBottom: 0 }}>
+            Edit Profile
+          </Title>
+
+          <Text type="secondary">
+            Update your personal information
+          </Text>
         </div>
-    );
+
+        {/* Profile Image */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginBottom: "40px",
+          }}
+        >
+          <div style={{ position: "relative" }}>
+            <Avatar
+              size={130}
+                src={imagePreview || null}
+              icon={<UserOutlined />}
+            />
+
+            <Upload
+              showUploadList={false}
+              beforeUpload={() => false}
+              onChange={handleImage}
+            >
+              <Button
+                type="primary"
+                shape="circle"
+                icon={<CameraOutlined />}
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  right: 0,
+                }}
+              />
+            </Upload>
+          </div>
+        </div>
+
+        {/* Form */}
+        <Form
+          layout="vertical"
+          form={form}
+          onFinish={handleSubmit}
+        >
+          <Row gutter={[20, 20]}>
+            {/* First Name */}
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="First Name"
+                name="first_name"
+                rules={[
+                  {
+                    required: true,
+                    message:
+                      "First name is required",
+                  },
+                ]}
+              >
+                <Input
+                  size="large"
+                  placeholder="Enter first name"
+                  prefix={<UserOutlined />}
+                />
+              </Form.Item>
+            </Col>
+
+            {/* Last Name */}
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Last Name"
+                name="last_name"
+                rules={[
+                  {
+                    required: true,
+                    message:
+                      "Last name is required",
+                  },
+                ]}
+              >
+                <Input
+                  size="large"
+                  placeholder="Enter last name"
+                  prefix={<UserOutlined />}
+                />
+              </Form.Item>
+            </Col>
+
+            {/* Email */}
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Email"
+                name="email"
+                rules={[
+                  {
+                    required: true,
+                    message: "Email is required",
+                  },
+                  {
+                    type: "email",
+                    message:
+                      "Enter valid email",
+                  },
+                ]}
+              >
+                <Input
+                  size="large"
+                  placeholder="Enter email"
+                  prefix={<MailOutlined />}
+                />
+              </Form.Item>
+            </Col>
+
+            {/* DOB */}
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Date of Birth"
+                name="dob"
+              >
+                <DatePicker
+                  size="large"
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+            </Col>
+
+            {/* Phone */}
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Phone"
+                name="phone"
+                rules={[
+                  {
+                    required: true,
+                    message:
+                      "Phone number is required",
+                  },
+                  {
+                    pattern: /^\d{10}$/,
+                    message:
+                      "Phone must be 10 digits",
+                  },
+                ]}
+              >
+                <Input
+                  size="large"
+                  placeholder="Enter phone number"
+                  prefix={<PhoneOutlined />}
+                />
+              </Form.Item>
+            </Col>
+
+            {/* Pincode */}
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Pincode"
+                name="pincode"
+                rules={[
+                  {
+                    pattern: /^\d{6}$/,
+                    message:
+                      "Pincode must be 6 digits",
+                  },
+                ]}
+              >
+                <Input
+                  size="large"
+                  placeholder="Enter pincode"
+                />
+              </Form.Item>
+            </Col>
+
+            {/* State */}
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="State"
+                name="state"
+                rules={[
+                  {
+                    required: true,
+                    message: "State is required",
+                  },
+                ]}
+              >
+                <Input
+                  size="large"
+                  placeholder="Enter state"
+                  prefix={
+                    <EnvironmentOutlined />
+                  }
+                />
+              </Form.Item>
+            </Col>
+
+            {/* Country */}
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Country"
+                name="country"
+                rules={[
+                  {
+                    required: true,
+                    message:
+                      "Country is required",
+                  },
+                ]}
+              >
+                <Input
+                  size="large"
+                  placeholder="Enter country"
+                  prefix={
+                    <EnvironmentOutlined />
+                  }
+                />
+              </Form.Item>
+            </Col>
+
+            {/* Address */}
+            <Col span={24}>
+              <Form.Item
+                label="Address"
+                name="address"
+                rules={[
+                  {
+                    required: true,
+                    message:
+                      "Address is required",
+                  },
+                ]}
+              >
+                <TextArea
+                  rows={4}
+                  placeholder="Enter address"
+                />
+              </Form.Item>
+            </Col>
+
+            {/* Submit */}
+            <Col span={24}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <Space>
+                  <Button
+                    size="large"
+                    onClick={() =>
+                      router.push(
+                        "/account/profile"
+                      )
+                    }
+                  >
+                    Cancel
+                  </Button>
+
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    size="large"
+                    loading={loading}
+                    icon={<SaveOutlined />}
+                  >
+                    Save Changes
+                  </Button>
+                </Space>
+              </div>
+            </Col>
+          </Row>
+        </Form>
+      </Card>
+    </div>
+  );
 }
