@@ -73,6 +73,10 @@ export default function UsersPage() {
 })
     .filter((u) => {
       if (statusFilter === "all") return true;
+      if (statusFilter === "Blocked") {
+        return u.is_blocked === true;
+      }
+      // active users
       return (u.status || "").toLowerCase() === statusFilter.toLowerCase();
     });
 }, [users, search, roleFilter, statusFilter]);
@@ -191,7 +195,7 @@ const handleBlockUser = async (user) => {
     const token = localStorage.getItem("token");
 
     const res = await fetch(
-      `http://localhost:5000/api/users/${user.id}/block`,
+       `http://localhost:5000/api/admin/users/${user.id}/block`,
       {
         method: "PUT",
         headers: {
@@ -208,7 +212,11 @@ const handleBlockUser = async (user) => {
      if (!res.ok) {
       throw new Error(data.message || "Unauthorized or failed");
     }
-    toast.success("User Blocked successfully");
+    toast.success(
+  user.is_blocked
+    ? "User Unblocked successfully"
+    : "User Blocked successfully"
+);
     fetchUsers();
   } catch (error) {
      toast.error(  error.message || "Blocked  failed" );
@@ -294,7 +302,7 @@ const handleBlockUser = async (user) => {
             <option>User</option>
           </select>
 
-          <select className="border p-2 rounded-lg" onChange={(e) => setStatusFilter(e.target.value)}>
+          <select className="border p-2 rounded-lg"  value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="all">All Status</option>
             <option>Active</option> 
             <option>Inactive</option>

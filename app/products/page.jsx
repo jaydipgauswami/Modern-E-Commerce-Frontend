@@ -22,7 +22,7 @@ import {
   ShoppingCartOutlined,
   EyeOutlined,
   SearchOutlined,
-  HeartOutlined, HeartFilled,
+  HeartOutlined, HeartFilled,ThunderboltOutlined,
 } from "@ant-design/icons";
 
 const { Meta } = Card;
@@ -33,7 +33,7 @@ const { Option } = Select;
 export default function ProductPage() {
   const [products, setProducts] = useState([]);
 const { addToCart,  wishlistItems,
-setWishlistItems, handleWishlist,  } = useCart();
+setWishlistItems, handleWishlist,handleBuyNow  } = useCart();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -111,11 +111,10 @@ setWishlistItems, handleWishlist,  } = useCart();
       (a, b) => b.price - a.price
     );
   }
-
   // Loading State
   if (loading) {
     return (
-      <div
+   <div
         style={{
           height: "80vh",
           display: "flex",
@@ -127,20 +126,14 @@ setWishlistItems, handleWishlist,  } = useCart();
       </div>
     );
   }
-
-
-
   return (
     <div
       style={{
-        minHeight: "100vh",
-        background: "#f5f5f5",
+        minHeight: "0vh",
+        // background: "#f5f5f5",
         padding: "24px",
       }}
-    >
-      {/* HEADER */}
-
-
+    >   
       {/* FILTER BAR */}
       <Card
         variant="borderless"
@@ -164,7 +157,6 @@ setWishlistItems, handleWishlist,  } = useCart();
               }
             />
           </Col>
-
           {/* Sort */}
           <Col xs={24} sm={12} md={6}>
             <Select
@@ -178,17 +170,14 @@ setWishlistItems, handleWishlist,  } = useCart();
               <Option value="latest">
                 Latest
               </Option>
-
               <Option value="priceLow">
                 Price: Low to High
               </Option>
-
               <Option value="priceHigh">
                 Price: High to Low
               </Option>
             </Select>
           </Col>
-
           {/* Category */}
           <Col xs={24} sm={12} md={8}>
             <Select
@@ -202,7 +191,6 @@ setWishlistItems, handleWishlist,  } = useCart();
               <Option value="all">
                 All Categories
               </Option>
-
               {categories.map((cat) => (
                 <Option
                   key={cat.id}
@@ -215,8 +203,6 @@ setWishlistItems, handleWishlist,  } = useCart();
           </Col>
         </Row>
       </Card>
-
-
       {/* PRODUCTS */}
       {filteredProducts.length === 0 ? (
         <Empty description="No Products Found" />
@@ -237,10 +223,11 @@ setWishlistItems, handleWishlist,  } = useCart();
             >
               <Card
                 hoverable
-                variant="borderless"
+              
                 style={{
                   borderRadius: "12px",
                   overflow: "hidden",
+                    border: "1.5px solid #e5e7eb"
                 }}
                 styles={{
                   body: {
@@ -424,19 +411,21 @@ setWishlistItems, handleWishlist,  } = useCart();
                     block
                     onClick={() => addToCart(p, 1)}
                   >
-                    Add
+                    Add To Cart
                   </Button>
-
-                  <Button
-                    size="middle"
-                    block
-                    onClick={() =>
-                      router.push(`/products/${p.id}`)
-                    }
-                  >
-                    Details
-                  </Button>
-                </div>
+  <Button
+    type=""
+    size="middle"
+    block
+    icon={<ThunderboltOutlined />}
+    onClick={() => handleBuyNow(p)}
+    style={{
+      fontWeight: "600",
+    }}
+  >
+    Buy Now
+  </Button>
+                     </div>
               </Card>
             </Col>
           ))}

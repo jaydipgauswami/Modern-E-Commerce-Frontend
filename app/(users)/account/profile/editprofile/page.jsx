@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -21,6 +21,7 @@ import {
 import {
   UserOutlined,
   CameraOutlined,
+  DeleteOutlined,
   SaveOutlined,
   MailOutlined,
   PhoneOutlined,
@@ -41,28 +42,114 @@ export default function EditProfile() {
 
   const [imagePreview, setImagePreview] = useState("");
 
-  // Image Upload
-  const handleImage = (info) => {
-    const file = info.file.originFileObj;
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(
+          "http://localhost:5000/api/users/me",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(
+            data.message || "Failed to fetch profile"
+          );
+        }
+
+        const user = data.user;
+
+        // Autofill form
+        form.setFieldsValue({
+          first_name: user.first_name || "",
+          last_name: user.last_name || "",
+          email: user.email || "",
+          phone: user.phone || "",
+          address: user.address || "",
+          state: user.state || "",
+          country: user.country || "",
+          pincode: user.pincode || "",
+          dob: user.dob ? dayjs(user.dob) : null,
+          image: user.image || "",
+        });
+
+        // Image Preview
+        if (user.image) {
+          setImagePreview(user.image);
+        }
+
+      } catch (error) {
+        console.log("Fetch Profile Error:", error.message);
+
+        message.error(error.message);
+      }
+    };
+
+    fetchProfile();
+  }, [form]);
+
+
+ const handleImage = async (info) => {
+
+  try {
+const file = info.file;
 
     if (!file) return;
 
-    const previewUrl = URL.createObjectURL(file);
+    const token = localStorage.getItem("token");
 
-    setImagePreview(previewUrl);
+    const formData = new FormData();
 
+    formData.append("image", file);
+
+    const res = await fetch(
+       "http://localhost:5000/api/upload",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },  
+        body: formData,
+      }
+    );
+
+    const data = await res.json();
+    console.log("UPLOAD RESPONSE:", data);
+    // IMPORTANT
+    setImagePreview(data.imageUrl);
+    
     form.setFieldsValue({
-      image: previewUrl,
+      image: data.imageUrl,
     });
-  };
+     message.success(
+      "Image uploaded successfully"
+    );
+  } catch (error) {
+    console.log(error);
+  }
+};
+const handleRemoveImage = () => {
 
-  // Submit
+  setImagePreview("");
+
+  form.setFieldsValue({
+    image: "",
+  });
+
+  message.success("Image removed");
+};
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
-
       const token = localStorage.getItem("token");
-
       const payload = {
         first_name: values.first_name || null,
         last_name: values.last_name || null,
@@ -82,7 +169,6 @@ export default function EditProfile() {
         "http://localhost:5000/api/users/update-profile",
         {
           method: "PUT",
-
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -105,10 +191,12 @@ export default function EditProfile() {
       );
 
       router.push("/account/profile");
+
     } catch (error) {
       console.log("Update Error:", error.message);
 
       message.error(error.message);
+
     } finally {
       setLoading(false);
     }
@@ -159,36 +247,55 @@ export default function EditProfile() {
           <div style={{ position: "relative" }}>
             <Avatar
               size={130}
-                src={imagePreview || null}
+              src={imagePreview || undefined}
               icon={<UserOutlined />}
             />
 
-            <Upload
-              showUploadList={false}
-              beforeUpload={() => false}
-              onChange={handleImage}
-            >
-              <Button
-                type="primary"
-                shape="circle"
-                icon={<CameraOutlined />}
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  right: 0,
-                }}
-              />
-            </Upload>
+         <Upload
+  showUploadList={false}
+  beforeUpload={() => false}
+  onChange={handleImage}
+  accept="image/*"
+>
+  <Button
+    type="primary"
+    shape="circle"
+    icon={<CameraOutlined />}
+    style={{
+      position: "absolute",
+      bottom: 0,
+      right: 0,
+    }}
+  />
+</Upload>
+
+{imagePreview && (
+      <Button
+        danger
+        shape="circle"
+        icon={<DeleteOutlined />}
+        onClick={handleRemoveImage}
+        style={{
+          position: "absolute",
+          top: 0,
+          right: 0,
+        }}
+      />
+    )}
           </div>
         </div>
 
-        {/* Form */}
+        {/* FORM */}
         <Form
           layout="vertical"
           form={form}
           onFinish={handleSubmit}
         >
+          <Form.Item name="image" hidden>
+  <Input />
+</Form.Item>
           <Row gutter={[20, 20]}>
+
             {/* First Name */}
             <Col xs={24} md={12}>
               <Form.Item
@@ -380,7 +487,7 @@ export default function EditProfile() {
               </Form.Item>
             </Col>
 
-            {/* Submit */}
+            {/* Buttons */}
             <Col span={24}>
               <div
                 style={{
@@ -412,6 +519,7 @@ export default function EditProfile() {
                 </Space>
               </div>
             </Col>
+
           </Row>
         </Form>
       </Card>

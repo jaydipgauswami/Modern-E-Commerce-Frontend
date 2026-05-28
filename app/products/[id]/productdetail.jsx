@@ -25,6 +25,8 @@ import {
   PlusOutlined,
   HeartOutlined,
   HeartFilled,
+  ThunderboltOutlined,
+  
 } from "@ant-design/icons";
 
 import { useCart } from "../../context/CartContext";
@@ -35,7 +37,7 @@ export default function ProductDetailClient({
   product,
 }) {
   const { addToCart ,  wishlistItems,
-setWishlistItems, handleWishlist, } = useCart();
+setWishlistItems, handleWishlist,handleBuyNow , } = useCart();
 
   const [quantity, setQuantity] =
     useState(1);
@@ -104,7 +106,7 @@ setWishlistItems, handleWishlist, } = useCart();
         }}
         styles={{
           body: {
-            padding: "30px",
+            padding: "20px",
           },
         }}
       >
@@ -411,6 +413,20 @@ setWishlistItems, handleWishlist, } = useCart();
               >
                 Add To Cart
               </Button>
+
+               <Button
+                  type=""
+                  size="large"
+                  block
+                  icon={<ThunderboltOutlined />}
+                  onClick={() => handleBuyNow()}
+                  style={{
+                    fontWeight: "600",
+                  }}
+                >
+                  Buy Now
+                </Button>
+               
             </Space>
           </Col>
         </Row>

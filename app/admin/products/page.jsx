@@ -87,7 +87,7 @@ const getCategoryName = (id) => {
 };
   // Refetch products when search, filter, or page changes
   useEffect(() => {
-    fetchProducts(page);
+    fetchProducts();
   }, [search, categoryFilter, page]);
 
   // Pagination calculation
@@ -130,7 +130,7 @@ const getCategoryName = (id) => {
     });
 
     const data = await res.json();
-
+console.log("PRODUCT LIST RESPONSE:", data);
     if (res.ok) {
       toast.success(isEditMode ? "Product Updated" : "Product Added");
 
@@ -149,6 +149,7 @@ const getCategoryName = (id) => {
       });
 
       setFile(null);
+       setPage(1);
       fetchProducts();
     } else {
       toast.error(data.message || "Failed");
@@ -206,7 +207,6 @@ const handleAddNew = () => {
     category_id: "",
     image: null
   });
-
   setOpen(true);
 };
  const handleEdit = (product) => {
@@ -227,9 +227,16 @@ const handleAddNew = () => {
   setOpen(true);
 };
 
-  const handleImageUpload = (e) => {
-    setForm({ ...form, image: e.target.files[0]});
-  };
+ const handleImageUpload = (e) => {
+  const file = e.target.files[0];
+
+  if (!file) return;
+
+  setForm((prev) => ({
+    ...prev,
+    image: file,
+  }));
+};
 
   return (
     <div className="p-6 ">
@@ -279,13 +286,19 @@ const handleAddNew = () => {
 
             <TableBody>
               {products.map((p) => (
+        
+                 
                 <TableRow key={p.id}>
                   <TableCell>
                     {p.image && (
-                      <img
-                        src={`http://localhost:5000/uploads/${p.image}`}
-                        className="w-12 h-12 object-cover rounded"
-                      />
+                      
+                    <img
+  src={`http://localhost:5000/uploads/${p.image}`}
+  alt={p.name}
+  width={60}
+  height={60}
+  className="rounded object-cover border"
+/>
                     )}
                   </TableCell>
                   <TableCell>{p.name}</TableCell>

@@ -1,20 +1,23 @@
 "use client";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { FaBox, FaHeart, FaHeadset, FaTags, FaUserEdit, FaGlobe,FaUserCircle } from "react-icons/fa";
+import { FaBox, FaHeart, FaHeadset, FaTags, FaUserEdit, FaGlobe,FaUserCircle ,FaShoppingCart} from "react-icons/fa";
 
 export default function AccountPage() {
   return (
-    <div className="min-h-screen w-full bg-gray-100 px-4 md:px-10 py-8">
+    <div className="min-h-screen w-full  px-4 md:px-10 py-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full bg-white rounded-2xl shadow-lg p-6 md:p-10"
       > 
+
+      
        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">My Account</h1>
         </div>
+        
         {/* Top Section */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <Link href="/orders" className="group flex flex-col items-center justify-center gap-3 p-6 border rounded-2xl hover:shadow-md hover:bg-gray-50 transition">
@@ -35,6 +38,14 @@ export default function AccountPage() {
             <FaTags className="text-2xl text-indigo-600 group-hover:scale-110 transition" />
             <span className="font-medium">Coupons</span>
           </Link>
+          <Link
+  href="/cart"
+  className="group flex flex-col items-center justify-center gap-3 p-6 border rounded-2xl hover:shadow-md hover:bg-gray-50 transition"
+>
+  <FaShoppingCart className="text-2xl text-indigo-600 group-hover:scale-110 transition" />
+
+  <span className="font-medium">Cart</span>
+</Link>
         </div>
 
         {/* Bottom Section */}

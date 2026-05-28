@@ -2,17 +2,22 @@
 import Link from "next/link";
 import { FaChartLine, FaBox, FaShoppingCart, FaUsers , FaThLarge } from "react-icons/fa";
 import { useEffect} from "react";
-import { useRouter} from "next/navigation";
-
-
+import { useRouter , usePathname } from "next/navigation";
 const SidebarLink = ({ href, icon, label }) => {
+   const pathname = usePathname();
+  const isActive = pathname === href;
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 p-2 rounded hover:bg-gray-100"
-    >
-      {icon}
-      {label}
+className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200
+        ${
+          isActive
+            ? "bg-blue-500 text-white shadow-md"
+            : "text-gray-700 hover:bg-gray-100 hover:text-blue-500"
+        }
+      `}    >
+       <span className="text-lg">{icon}</span>
+      <span className="font-medium">{label}</span>
     </Link>
   );
 };
@@ -29,7 +34,7 @@ export default function AdminLayout({ children }) {
     }
   }, []);
   return (
-    <div className="flex h-screen mt-20">
+    <div className="flex h-screen mt-0">
 
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-md flex flex-col">

@@ -166,7 +166,7 @@ export default function ProfilePage() {
           <Space size={20}>
             <Avatar
               size={50}
-              src={user?.image}
+              src={user?.image || undefined}
               icon={<UserOutlined />}
             />
 
