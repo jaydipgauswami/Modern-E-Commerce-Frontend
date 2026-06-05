@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Toaster ,toast } from "sonner";
 import { Input } from "../../components/ui/input"
 import { useAuth } from "../context/AuthContext";
+import {useCart} from "../context/CartContext"
 
 
 export default function LoginPage() {
@@ -21,7 +22,7 @@ const { login } = useAuth();
   const [showForgot, setShowForgot] = useState(false);
   
 
-  
+  const {getCart , getWishlist} = useCart()
 
   // Validation
   const validateForm = () => {
@@ -63,6 +64,8 @@ const { login } = useAuth();
      if (data.user.role === "admin") {
       router.push("/admin/dashboard");
     } else {
+        await getCart();
+    await getWishlist();
       router.push("/");
     }
 

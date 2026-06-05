@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-
 import {
   Card,
   Row,
@@ -29,33 +28,25 @@ const { Title, Text } = Typography;
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
-
   const [loading, setLoading] = useState(true);
 
-  // Fetch Profile
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch(
-        "http://localhost:5000/api/users/me",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await fetch("http://localhost:5000/api/users/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to fetch profile");
-      }
+      if (!res.ok) throw new Error(data.message);
 
       setUser(data.user);
-    } catch (error) {
-      console.log("Profile Error:", error.message);
+    } catch (err) {
+      console.log("Profile Error:", err.message);
     } finally {
       setLoading(false);
     }
@@ -65,215 +56,142 @@ export default function ProfilePage() {
     fetchProfile();
   }, []);
 
-  // Loading
   if (loading) {
     return (
-      <div
-        style={{
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          background: "#f5f5f5",
-        }}
-      >
+      <div className="h-screen flex items-center justify-center bg-gray-50">
         <Spin size="large" />
       </div>
     );
   }
 
   const profileData = [
-    {
-      title: "First Name",
-      value: user?.first_name || "N/A",
-      icon: <UserOutlined />,
-    },
-    {
-      title: "Last Name",
-      value: user?.last_name || "N/A",
-      icon: <UserOutlined />,
-    },
-    {
-      title: "Email",
-      value: user?.email || "N/A",
-      icon: <MailOutlined />,
-    },
-    {
-      title: "Date of Birth",
-      value: user?.dob || "N/A",
-      icon: <CalendarOutlined />,
-    },
-    {
-      title: "Phone",
-      value: user?.phone || "N/A",
-      icon: <PhoneOutlined />,
-    },
-    {
-      title: "Pincode",
-      value: user?.pincode || "N/A",
-      icon: <NumberOutlined />,
-    },
-    {
-      title: "State",
-      value: user?.state || "N/A",
-      icon: <EnvironmentOutlined />,
-    },
-    {
-      title: "Country",
-      value: user?.country || "N/A",
-      icon: <GlobalOutlined />,
-    },
+    { title: "First Name", value: user?.first_name, icon: <UserOutlined /> },
+    { title: "Last Name", value: user?.last_name, icon: <UserOutlined /> },
+    { title: "Email", value: user?.email, icon: <MailOutlined /> },
+    { title: "DOB", value: user?.dob, icon: <CalendarOutlined /> },
+    { title: "Phone", value: user?.phone, icon: <PhoneOutlined /> },
+    { title: "Pincode", value: user?.pincode, icon: <NumberOutlined /> },
+    { title: "State", value: user?.state, icon: <EnvironmentOutlined /> },
+    { title: "State", value: user?.city, icon: <EnvironmentOutlined /> },
+    { title: "Country", value: user?.country, icon: <GlobalOutlined /> },
   ];
 
   return (
-    <div
-      style={{
-        height: "100vh",
-        overflow: "hidden",
-        background: "#f5f5f5",
-        padding: "16px",
-      }}
-    >
-      <Card
-        variant="borderless"
-  style={{
-    height: "100%",
-    borderRadius: "20px",
-    overflow: "hidden",
-  }}
-  styles={{
-    body: {
-      padding: 0,
-      height: "100%",
-      display: "flex",
-      flexDirection: "column",
-    },
-  }}
-      >
-        {/* Header */}
-        <div
-          style={{
-            background: "#1677ff",
-            padding: "10px 30px",
-            color: "#fff",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "20px",
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-6">
+      <div className="max-w-5xl mx-auto">
+        
+        {/* CARD */}
+        <Card
+          className="shadow-lg rounded-2xl"
+          styles={{
+            body: { padding: 0 },
           }}
         >
-          <Space size={20}>
+          {/* HEADER */}
+<div
+  style={{
+    background:
+      "linear-gradient(135deg,#1677ff,#4096ff,#69b1ff)",
+    padding: "24px",
+    color: "#fff",
+  }}
+  className="flex flex-col sm:flex-row items-center justify-between gap-4"
+>            
+            {/* USER INFO */}
+            <div className="flex items-center gap-4">
             <Avatar
-              size={50}
-              src={user?.image || undefined}
-              icon={<UserOutlined />}
-            />
+  size={80}
+  src={
+    user?.image
+      ? `http://localhost:5000/uploads/${user.image}`
+      : undefined
+  }
+  icon={<UserOutlined />}
+/>
 
             <div>
-              <Title
-                level={3}
-                style={{
-                  color: "#fff",
-                  margin: 0,
-                }}
-              >
-                {user?.first_name || user?.name || "User"}
-              </Title>
+  <h2 className="text-xl sm:text-2xl font-bold">
+    {user?.first_name} {user?.last_name}
+  </h2>
 
-              <Text style={{ color: "#dbeafe" }}>
-                {user?.email}
-              </Text>
+  <p className="text-blue-100 text-sm break-all">
+    {user?.email}
+  </p>
+</div>
             </div>
-          </Space>
 
-          <Link href="/account/profile/editprofile">
-            <Button
-              type="primary"
-              size="large"
-              icon={<EditOutlined />}
-            >
-              Edit Profile
-            </Button>
-          </Link>
-        </div>
+            {/* BUTTON */}
+            <Link href="/account/profile/editprofile">
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                className="w-full sm:w-auto"
+              >
+                Edit Profile
+              </Button>
+            </Link>
+          </div>
 
-        {/* Content */}
+          {/* BODY */}
+          <div className="p-4 sm:p-6">
+
+            <Row gutter={[16, 16]}>
+              {profileData.map((item, i) => (
+                <Col xs={24} sm={12} key={i}>
+                  <Card className="rounded-xl bg-gray-50">
+                    <Space align="start">
+                      <div className="text-xl text-blue-600">
+                        {item.icon}
+                      </div>
+
+                      <div>
+                        <Text type="secondary">{item.title}</Text>
+                        <div className="font-semibold">
+                          {item.value || "N/A"}
+                        </div>
+                      </div>
+                    </Space>
+                  </Card>
+                </Col>
+              ))}
+
+              {/* ADDRESS */}
+           <Col span={24}>
+  <Card
+    style={{
+      borderRadius: 16,
+      background: "#fafafa",
+    }}
+  >
+    <Space align="start">
+      <EnvironmentOutlined
+        style={{
+          color: "#1677ff",
+          fontSize: 20,
+        }}
+      />
+
+      <div>
+        <Text type="secondary">
+          Complete Address
+        </Text>
+
         <div
           style={{
-            flex: 1,
-            padding: "20px",
-            overflow: "hidden",
+            fontWeight: 600,
+            marginTop: 8,
           }}
         >
-          <Row gutter={[16, 16]}>
-            {profileData.map((item, index) => (
-              <Col xs={24} md={12} key={index}>
-                <Card
-                   variant="borderless"
-                  style={{
-                    borderRadius: "16px",
-                    background: "#fafafa",
-                    height: "100%",
-                  }}
-                >
-                  <Space align="start">
-                    <div
-                      style={{
-                        fontSize: "20px",
-                        marginTop: "5px",
-                      }}
-                    >
-                      {item.icon}
-                    </div>
-
-                    <div>
-                      <Text type="secondary">
-                        {item.title}
-                      </Text>
-
-                      <Title
-                        level={5}
-                        style={{
-                          marginTop: "5px",
-                          marginBottom: 0,
-                        }}
-                      >
-                        {item.value}
-                      </Title>
-                    </div>
-                  </Space>
-                </Card>
-              </Col>
-            ))}
-
-            {/* Address */}
-            <Col span={24}>
-              <Card
-                variant="borderless"
-                style={{
-                  borderRadius: "16px",
-                  background: "#fafafa",
-                }}
-              >
-                <Text type="secondary">
-                  Address
-                </Text>
-
-                <Title
-                  level={5}
-                  style={{
-                    marginTop: "8px",
-                    marginBottom: 0,
-                  }}
-                >
-                  {user?.address || "N/A"}
-                </Title>
-              </Card>
-            </Col>
-          </Row>
+          {user?.address || "N/A"}
         </div>
-      </Card>
+      </div>
+    </Space>
+  </Card>
+</Col>
+            </Row>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

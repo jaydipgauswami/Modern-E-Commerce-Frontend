@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
+import {country ,state , city} from "country-state-city"
 import {
   Card,
   Form,
@@ -16,8 +16,13 @@ import {
   DatePicker,
   message,
   Space,
+  Select,
 } from "antd";
-
+import {
+  Country,
+  State,
+  City,
+} from "country-state-city";
 import {
   UserOutlined,
   CameraOutlined,
@@ -35,14 +40,16 @@ const { TextArea } = Input;
 
 export default function EditProfile() {
   const router = useRouter();
-
   const [loading, setLoading] = useState(false);
-
   const [form] = Form.useForm();
-
   const [imagePreview, setImagePreview] = useState("");
-
+  const [countries, setCountries] = useState([]);
+const [states, setStates] = useState([]);
+const [cities, setCities] = useState([]);
+const [selectedCountry, setSelectedCountry] = useState("");
+const [selectedState, setSelectedState] = useState("");
   useEffect(() => {
+     setCountries(Country.getAllCountries());
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -56,7 +63,6 @@ export default function EditProfile() {
             },
           }
         );
-
         const data = await res.json();
 
         if (!res.ok) {
@@ -66,7 +72,27 @@ export default function EditProfile() {
         }
 
         const user = data.user;
+const countryObj = Country.getAllCountries().find(
+  (c) => c.name === user.country
+);
 
+if (countryObj) {
+  const stateList = State.getStatesOfCountry(countryObj.isoCode);
+  setStates(stateList);
+
+  const stateObj = stateList.find(
+    (s) => s.name === user.state
+  );
+
+  if (stateObj) {
+    const cityList = City.getCitiesOfState(
+      countryObj.isoCode,
+      stateObj.isoCode
+    );
+
+    setCities(cityList);
+  }
+}
         // Autofill form
         form.setFieldsValue({
           first_name: user.first_name || "",
@@ -76,16 +102,17 @@ export default function EditProfile() {
           address: user.address || "",
           state: user.state || "",
           country: user.country || "",
+            city: user.city || "",
           pincode: user.pincode || "",
           dob: user.dob ? dayjs(user.dob) : null,
           image: user.image || "",
         });
-
+        setSelectedCountry(user.country || "");
+ setSelectedState(user.state || "");
         // Image Preview
         if (user.image) {
           setImagePreview(user.image);
         }
-
       } catch (error) {
         console.log("Fetch Profile Error:", error.message);
 
@@ -125,7 +152,7 @@ const file = info.file;
     console.log("UPLOAD RESPONSE:", data);
     // IMPORTANT
     setImagePreview(data.imageUrl);
-    
+    console.log( "image :",data.imageUrl)
     form.setFieldsValue({
       image: data.imageUrl,
     });
@@ -137,13 +164,10 @@ const file = info.file;
   }
 };
 const handleRemoveImage = () => {
-
   setImagePreview("");
-
   form.setFieldsValue({
     image: "",
   });
-
   message.success("Image removed");
 };
   const handleSubmit = async (values) => {
@@ -161,10 +185,10 @@ const handleRemoveImage = () => {
         address: values.address || null,
         state: values.state || null,
         country: values.country || null,
+        city: values.city || null,
         pincode: values.pincode || null,
         image: values.image || null,
       };
-
       const res = await fetch(
         "http://localhost:5000/api/users/update-profile",
         {
@@ -173,35 +197,26 @@ const handleRemoveImage = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-
           body: JSON.stringify(payload),
         }
       );
-
       const data = await res.json();
-
       if (!res.ok) {
         throw new Error(
           data.message || "Failed to update profile"
         );
       }
-
       message.success(
         "Profile updated successfully"
       );
-
-      router.push("/account/profile");
-
+      router.push("/account");
     } catch (error) {
       console.log("Update Error:", error.message);
-
       message.error(error.message);
-
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div
       style={{
@@ -230,12 +245,10 @@ const handleRemoveImage = () => {
           <Title level={2} style={{ marginBottom: 0 }}>
             Edit Profile
           </Title>
-
           <Text type="secondary">
             Update your personal information
           </Text>
         </div>
-
         {/* Profile Image */}
         <div
           style={{
@@ -250,7 +263,6 @@ const handleRemoveImage = () => {
               src={imagePreview || undefined}
               icon={<UserOutlined />}
             />
-
          <Upload
   showUploadList={false}
   beforeUpload={() => false}
@@ -268,7 +280,6 @@ const handleRemoveImage = () => {
     }}
   />
 </Upload>
-
 {imagePreview && (
       <Button
         danger
@@ -423,50 +434,134 @@ const handleRemoveImage = () => {
             </Col>
 
             {/* State */}
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="State"
-                name="state"
-                rules={[
-                  {
-                    required: true,
-                    message: "State is required",
-                  },
-                ]}
-              >
-                <Input
-                  size="large"
-                  placeholder="Enter state"
-                  prefix={
-                    <EnvironmentOutlined />
-                  }
-                />
-              </Form.Item>
-            </Col>
+           <Col xs={24} md={12}>
+  <Form.Item
+    label="State"
+    name="state"
+    rules={[
+      {
+        required: true,
+        message: "State is required",
+      },
+    ]}
+  >
+    <Select
+      size="large"
+      showSearch
+      placeholder="Select State"
+      optionFilterProp="children"
+      onChange={(value) => {
+        setSelectedState(value);
+
+        const country = countries.find(
+          (c) => c.name === selectedCountry
+        );
+
+        const state = states.find(
+          (s) => s.name === value
+        );
+
+        setCities(
+          City.getCitiesOfState(
+            country?.isoCode,
+            state?.isoCode
+          )
+        );
+
+        form.setFieldsValue({
+          city: undefined,
+        });
+      }}
+    >
+      {states.map((state) => (
+        <Select.Option
+          key={state.isoCode}
+          value={state.name}
+        >
+          {state.name}
+        </Select.Option>
+      ))}
+    </Select>
+  </Form.Item>
+</Col>
 
             {/* Country */}
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="Country"
-                name="country"
-                rules={[
-                  {
-                    required: true,
-                    message:
-                      "Country is required",
-                  },
-                ]}
-              >
-                <Input
-                  size="large"
-                  placeholder="Enter country"
-                  prefix={
-                    <EnvironmentOutlined />
-                  }
-                />
-              </Form.Item>
-            </Col>
+         <Col xs={24} md={12}>
+  <Form.Item
+    label="Country"
+    name="country"
+    rules={[
+      {
+        required: true,
+        message: "Country is required",
+      },
+    ]}
+  >
+    <Select
+      size="large"
+      showSearch
+      placeholder="Select Country"
+      optionFilterProp="children"
+      onChange={(value) => {
+        setSelectedCountry(value);
 
+        const country = countries.find(
+          (c) => c.name === value
+        );
+
+        setStates(
+          State.getStatesOfCountry(country?.isoCode)
+        );
+
+        setCities([]);
+
+        form.setFieldsValue({
+          state: undefined,
+          city: undefined,
+        });
+      }}
+    >
+      {countries.map((country) => (
+        <Select.Option
+          key={country.isoCode}
+          value={country.name}
+        >
+          {country.name}
+        </Select.Option>
+      ))}
+    </Select>
+  </Form.Item>
+</Col>
+ {/* city */}
+
+ <Col xs={24} md={12}>
+  <Form.Item
+    label="City"
+    name="city"
+    rules={[
+      {
+        required: true,
+        message: "City is required",
+      },
+    ]}
+  >
+    <Select
+      size="large"
+      showSearch
+      placeholder="Select City"
+      optionFilterProp="children"
+    >
+      {cities.map((city) => (
+        <Select.Option
+          key={city.name}
+          value={city.name}
+        >
+          {city.name}
+        </Select.Option>
+      ))}
+    </Select>
+  </Form.Item>
+</Col>
             {/* Address */}
             <Col span={24}>
               <Form.Item

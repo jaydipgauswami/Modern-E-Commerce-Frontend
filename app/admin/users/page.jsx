@@ -1,458 +1,725 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import {toast, Toaster} from "sonner"
+import ProtectedRoute from "../../../component/ProtectedRoute";
+import { 
+  Card, 
+  Table, 
+  Button, 
+  Input, 
+  Select, 
+  Tag, 
+  Badge, 
+  Space, 
+  Row, 
+  Col, 
+  Tooltip, 
+  Popconfirm, 
+  Modal, 
+  Form, 
+  Empty, 
+  Checkbox, 
+  message 
+} from "antd";
+import { 
+  SearchOutlined, 
+  PlusOutlined, 
+  EditOutlined, 
+  DeleteOutlined, 
+  LockOutlined, 
+  UnlockOutlined,
+  ReloadOutlined,
+  InfoCircleOutlined,
+  CloseOutlined
+} from "@ant-design/icons";
 
 const API_URL = "http://localhost:5000/api/admin/users";
 
 export default function UsersPage() {
+  const router = useRouter();
+
+  // Users State
   const [users, setUsers] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  
+  // Search, Filters & Modals State
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedUsers, setSelectedUsers] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState(null);
-
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "User",
-    status: "Active",
-  });
-
+  
+  // UI states
   const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
 
+  // Form Instance
+  const [formInstance] = Form.useForm();
+
+  // Auth Error Redirect
   const handleAuthError = (res) => {
-  if (res.status === 401) {
-    localStorage.removeItem("token");
-    window.location.href = "/login";
-    return true;
-  }
-  return false;
-};
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      message.error("Session unauthorized. Redirecting to login...");
+      router.push("/login");
+      return true;
+    }
+    return false;
+  };
 
   // Fetch Users
   const fetchUsers = async () => {
+    setLoading(true);
     try {
-          const token = localStorage.getItem("token");
-
-      const res = await fetch(API_URL,{
-         method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      const token = localStorage.getItem("token");
+      const res = await fetch(API_URL, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (handleAuthError(res)) return;
       const data = await res.json();
-        if (!res.ok) {
-      throw new Error(data.message || "Failed to fetch users");
-    }
-      setUsers(data.users || data);
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to fetch users");
+      }
+      setUsers(data.users || data || []);
     } catch (err) {
-      toast.error("Failed to fetch users");
+      message.error(err.message || "Failed to fetch users catalog");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchUsers();
   }, []);
-  // Filtered Users (UI only)
- const filteredUsers = useMemo(() => {
-  return users
-    .filter((u) =>
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
-    )
-   .filter((u) => {
-  if (roleFilter === "all") return true;
-  return (u.role || "").trim().toLowerCase() === roleFilter.toLowerCase();
-})
-    .filter((u) => {
-      if (statusFilter === "all") return true;
-      if (statusFilter === "Blocked") {
-        return u.is_blocked === true;
-      }
-      // active users
-      return (u.status || "").toLowerCase() === statusFilter.toLowerCase();
-    });
-}, [users, search, roleFilter, statusFilter]);
-  //  Checkbox
+
+  // Filtered Users (Search, Role, Status)
+  const filteredUsers = useMemo(() => {
+    return users
+      .filter((u) =>
+        u.name.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase())
+      )
+      .filter((u) => {
+        if (roleFilter === "all") return true;
+        return (u.role || "").trim().toLowerCase() === roleFilter.toLowerCase();
+      })
+      .filter((u) => {
+        if (statusFilter === "all") return true;
+        if (statusFilter === "Blocked") {
+          return u.is_blocked === true;
+        }
+        return (u.status || "").toLowerCase() === statusFilter.toLowerCase();
+      });
+  }, [users, search, roleFilter, statusFilter]);
+
+  // Checkbox Select handler
   const toggleSelect = (id) => {
     setSelectedUsers((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
-  const toggleSelectAll = () => {
+
+  const handleSelectAllMobile = () => {
     if (selectedUsers.length === filteredUsers.length) {
       setSelectedUsers([]);
     } else {
       setSelectedUsers(filteredUsers.map((u) => u.id));
     }
   };
-  //  Open Add/Edit Modal
+
+  // Open Modal Forms
   const openAddModal = () => {
-    setForm({ name: "", email: "", password: "", role: "User", status: "Active" });
+    formInstance.resetFields();
     setEditId(null);
     setModalOpen(true);
   };
+
   const openEditModal = (user) => {
-    setForm({
+    formInstance.setFieldsValue({
       name: user.name,
       email: user.email,
-      password: "",
       role: user.role,
       status: user.status,
     });
     setEditId(user.id);
     setModalOpen(true);
   };
-  // add user 
-  const addUser = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization : `Bearer ${token}`
-      },
-      body: JSON.stringify(form),
-    });
-      if (handleAuthError(res)) return;
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message);                
-    toast.success("User created successfully");
-    setModalOpen(false);
-    fetchUsers();
-  } catch (err) {
-    toast.error(err.message || "Failed to create user");
-  }
-};
-// update user 
-const updateUser = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/${editId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(form),
-    });
-      if (handleAuthError(res)) return;
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message);
-    toast.success("User updated successfully");
-    setModalOpen(false);
-    setEditId(null);
-    fetchUsers();
-  } catch (err) {
-    toast.error(err.message || "Failed to update user");
-  }
-};
-const handleSubmit = (e) => {
-  e.preventDefault();
-//  console.log("editId at submit:", editId);
-  if (editId) {
-    updateUser();
-  } else {
-    addUser();
-  }
-};
-  // Delete User
-  const deleteUser = async (id) => {
-  try {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-      if (handleAuthError(res)) return;
-    const data = await res.json();
 
-    //  IMPORTANT: check response
-    if (!res.ok) {
-      throw new Error(data.message || "Unauthorized or failed");
+  // Add User Operation
+  const addUser = async (values) => {
+    setSubmitLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(values),
+      });
+      if (handleAuthError(res)) return;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      
+      toast.success("User created successfully");
+      setModalOpen(false);
+      fetchUsers();
+    } catch (err) {
+      message.error(err.message || "Failed to create user account");
+    } finally {
+      setSubmitLoading(false);
     }
+  };
 
-    toast.success("User deleted successfully");
-    fetchUsers();
-
-  } catch (err) {
-    toast.error(  err.message || "Delete failed" );
-  }
-};
-const handleBlockUser = async (user) => {
-  try {
-    const token = localStorage.getItem("token");
-
-    const res = await fetch(
-       `http://localhost:5000/api/admin/users/${user.id}/block`,
-      {
+  // Update User Operation
+  const updateUser = async (values) => {
+    setSubmitLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/${editId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          is_blocked: !user.is_blocked, // toggle
-        }),
-      }
-    );
-     if (handleAuthError(res)) return;
-    const data = await res.json();
-     if (!res.ok) {
-      throw new Error(data.message || "Unauthorized or failed");
-    }
-    toast.success(
-  user.is_blocked
-    ? "User Unblocked successfully"
-    : "User Blocked successfully"
-);
-    fetchUsers();
-  } catch (error) {
-     toast.error(  error.message || "Blocked  failed" );
-  }
-};
-
-  // 🔹 Bulk Delete
-  const deleteSelected = async () => {
-  try {
-    if (!selectedUsers || selectedUsers.length === 0) {
-      toast.error("No users selected");
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-
-    const res = await fetch("http://localhost:5000/api/admin/users/bulk", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        ids: selectedUsers,
-        action: "delete",
-      }),
-    });
+        body: JSON.stringify(values),
+      });
       if (handleAuthError(res)) return;
-
-
-    const data = await res.json();
-
-    //  IMPORTANT: check response
-    if (!res.ok) {
-      throw new Error(data.message || "Bulk delete failed");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      
+      toast.success("User details updated");
+      setModalOpen(false);
+      setEditId(null);
+      fetchUsers();
+    } catch (err) {
+      toast.error(err.message || "Failed to update user");
+    } finally {
+      setSubmitLoading(false);
     }
-
-    toast.success(data.message || "Selected users deleted");
-
-    setSelectedUsers([]);
-    fetchUsers();
-
-  } catch (err) {
-    toast.error(err.message || "Something went wrong");
-  }
-};
-
-  const badge = (type, value) => {
-    const base = "px-2 py-1 rounded-full text-xs font-medium";
-    const colors =
-      type === "role"
-        ? {
-            Admin: "bg-red-100 text-red-600",
-            Manager: "bg-yellow-100 text-yellow-700",
-            User: "bg-green-100 text-green-700",
-          }
-        : {
-            Active: "bg-green-100 text-green-700",
-           inactive: "bg-gray-300 text-gray-700",
-            Blocked: "bg-red-100 text-red-600",
-          };
-
-    return <span className={`${base} ${colors[value]}`}>{value}</span>;
   };
 
-  return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+  const handleSubmit = (values) => {
+    if (editId) {
+      updateUser(values);
+    } else {
+      addUser(values);
+    }
+  };
 
-      {/* 🔹 Top Bar */}
-      <div className="bg-white p-4 rounded-2xl shadow flex flex-col md:flex-row gap-3 justify-between">
-        <input
-          className="border border-gray-300 p-2 rounded-lg w-full md:w-1/3"
-          placeholder="Search name or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+  // Delete User Account
+  const deleteUser = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (handleAuthError(res)) return;
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Operation failed");
+      }
 
-        <div className="flex gap-2 flex-wrap">
-          <select className="border p-2 rounded-lg" onChange={(e) => setRoleFilter(e.target.value)}>
-            <option value="all">All Roles</option>
-            <option>Admin</option>
-            <option>Manager</option>
-            <option>User</option>
-          </select>
+      toast.success("User deleted successfully");
+      setSelectedUsers((prev) => prev.filter((key) => key !== id));
+      fetchUsers();
+    } catch (err) {
+      toast.error(err.message || "Delete failed");
+    }
+  };
 
-          <select className="border p-2 rounded-lg"  value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="all">All Status</option>
-            <option>Active</option> 
-            <option>Inactive</option>
-            <option>Blocked</option>
-          </select>
+  // Toggle block user
+  const handleBlockUser = async (user) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:5000/api/admin/users/${user.id}/block`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          is_blocked: !user.is_blocked,
+        }),
+      });
+      if (handleAuthError(res)) return;
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to toggle status");
+      }
 
-          <button onClick={() => { setSearch(""); setRoleFilter("all"); setStatusFilter("all"); }}
-            className="px-3 py-2 bg-gray-200 rounded-lg">
-            Clear
-          </button>
+      toast.success(user.is_blocked ? "User unblocked successfully" : "User blocked successfully");
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.message || "Status change failed");
+    }
+  };
 
-         <button onClick={openAddModal} className="bg-blue-600 text-white px-4 py-2 rounded">
-  + Add User
-</button>
-        </div>
-      </div>
+  // Bulk Delete Selected Accounts
+  const deleteSelected = async () => {
+    try {
+      if (selectedUsers.length === 0) {
+        toast.warning("No users selected");
+        return;
+      }
 
-      {/* 🔹 Bulk Actions */}
-      {selectedUsers.length > 0 && (
-        <div className="mt-3 p-3 bg-white rounded-xl shadow flex gap-3">
-          <button onClick={deleteSelected} className="bg-red-500 text-white px-3 py-1 rounded">
-            Delete Selected
-          </button>
-        </div>
-      )}
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:5000/api/admin/users/bulk", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ids: selectedUsers,
+          action: "delete",
+        }),
+      });
+      if (handleAuthError(res)) return;
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Bulk operation failed");
+      }
 
-      {/* 🔹 Table */}
-      <div className="mt-4 overflow-x-auto bg-white rounded- shadow">
-        <table className="w-full min-w-800px">
-          <thead className="bg-gray-100 sticky top-0">
+      toast.success(data.message || "Selected users deleted successfully");
+      setSelectedUsers([]);
+      fetchUsers();
+    } catch (err) {
+    toast.error(err.message || "Something went wrong processing bulk delete");
+    }
+  };
 
-            <tr className="border border-gray-300">
-                  <th className="p-3 w-10"></th>
-              <th className="p-3 text-left">Name</th>
-              <th className="p-3 text-left">Email</th>
-              <th className="p-3 text-center">Role</th>
-              <th className="p-3 text-center ">Status</th>
-              <th className="p-3 text-right">Actions</th>
-            </tr>
+  // Clear all filter values
+  const handleClearFilters = () => {
+    setSearch("");
+    setRoleFilter("all");
+    setStatusFilter("all");
+  };
 
-            
-          </thead>
+  // Badge/Tag style wrappers
+  const getRoleTag = (role) => {
+    const r = (role || "").trim().toLowerCase();
+    if (r === "admin") return <Tag color="red" className="rounded-full px-3">Admin</Tag>;
+    if (r === "manager") return <Tag color="orange" className="rounded-full px-3">Manager</Tag>;
+    return <Tag color="green" className="rounded-full px-3">User</Tag>;
+  };
 
-          <tbody>
-            {filteredUsers.map((u) => (
-              <tr key={u.id} className=" border border-gray-300">
-                <td className="p-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedUsers.includes(u.id)}
-                    onChange={() => toggleSelect(u.id)}
-                  />
-                </td>
-               
+  const getStatusTag = (status, isBlocked) => {
+    if (isBlocked) return <Tag color="error" className="rounded-full px-3">Blocked</Tag>;
+    const s = (status || "").trim().toLowerCase();
+    if (s === "active") return <Tag color="success" className="rounded-full px-3">Active</Tag>;
+    if (s === "inactive") return <Tag color="default" className="rounded-full px-3">Inactive</Tag>;
+    return <Tag color="error" className="rounded-full px-3">Blocked</Tag>;
+  };
 
-                <td className="p-3">{u.name}</td>
-                <td className="p-3">{u.email}</td>
-
-                <td className="p-3 text-center">{badge("role", u.role)}</td>
-                <td className="p-3 text-center">{badge("status", u.status)}</td>
-
-                <td className="p-3 flex gap-2 justify-end">
-                  <Button onClick={() => openEditModal(u)}>
-                    Edit
-                  </ Button>
-                  < Button onClick={() => deleteUser(u.id)} className="text-red-500  ">
-                    Delete
-                  </ Button>
-                    <Button onClick={() => handleBlockUser(u)}>
-  {u.is_blocked ? "Unblock" : "Block"}
-</Button>
-                
-                </td>
-                
-              </tr>
-            ))}
-          
-          </tbody>
-             
-        </table>
-      </div>
-
-      {/* Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-2xl w-[40%] md:w-400px">
-            <h2 className="text-xl font-semibold mb-3">
-              {editId ? "Edit User" : "Add User"}
-            </h2>
-
-            <input
-              className="border p-2 w-full mb-2 rounded"
-              placeholder="Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+  // Desktop Table Column configs
+  const columns = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      sorter: (a, b) => a.name.localeCompare(b.name),
+      render: (text) => (
+        <Space>
+          <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs select-none">
+            {text ? text.charAt(0).toUpperCase() : "?"}
+          </div>
+          <span className="font-semibold text-gray-800">{text}</span>
+        </Space>
+      ),
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+      render: (email) => <span className="text-gray-500 text-xs">{email}</span>,
+    },
+    {
+      title: "Role",
+      dataIndex: "role",
+      key: "role",
+      align: "center",
+      render: (role) => getRoleTag(role),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      align: "center",
+      render: (status, record) => getStatusTag(status, record.is_blocked),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      align: "right",
+      width: 140,
+      render: (_, record) => (
+        <Space size="small">
+          <Tooltip title="Edit Details">
+            <Button
+              type="text"
+              icon={<EditOutlined className="text-amber-500 hover:scale-110 transition-transform" />}
+              onClick={() => openEditModal(record)}
             />
+          </Tooltip>
 
-            <input
-              className="border p-2 w-full mb-2 rounded"
-              placeholder="Email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-            />
-
-            {!editId && (
-              <input
-                className="border p-2 w-full mb-2 rounded"
-                placeholder="Password"
-                type="password"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
+          <Tooltip title={record.is_blocked ? "Unblock Account" : "Block Account"}>
+            <Popconfirm
+              title={record.is_blocked ? "Unblock User" : "Block User"}
+              description={`Are you sure you want to ${record.is_blocked ? "unblock" : "block"} ${record.name}?`}
+              onConfirm={() => handleBlockUser(record)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button
+                type="text"
+                icon={
+                  record.is_blocked ? (
+                    <UnlockOutlined className="text-green-500 hover:scale-110 transition-transform" />
+                  ) : (
+                    <LockOutlined className="text-red-500 hover:scale-110 transition-transform" />
+                  )
+                }
               />
-            )}
+            </Popconfirm>
+          </Tooltip>
 
-            <select
-              className="border p-2 w-full mb-2 rounded"
-              value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value })}
+          <Tooltip title="Delete Account">
+            <Popconfirm
+              title="Delete Account"
+              description={`Delete account "${record.name}" permanently?`}
+              onConfirm={() => deleteUser(record.id)}
+              okText="Yes"
+              cancelText="No"
+              okButtonProps={{ danger: true }}
             >
-              <option>User</option>
-              <option>Manager</option>
-              <option>Admin</option>
-            </select>
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined className="hover:scale-110 transition-transform" />}
+              />
+            </Popconfirm>
+          </Tooltip>
+        </Space>
+      ),
+    },
+  ];
 
-            <select
-              className="border p-2 w-full mb-3 rounded"
-              value={form.status}
-              onChange={(e) => setForm({ ...form, status: e.target.value })}
+  return (
+   <ProtectedRoute>
+     <div className="p-4 sm:p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
+      
+      {/* Title Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+            User Management
+          </h1>
+          <p className="text-gray-500 text-xs sm:text-sm mt-1">
+            View, manage, update, and regulate access roles for store user accounts.
+          </p>
+        </div>
+        <Button 
+          type="primary" 
+          size="large"
+          icon={<PlusOutlined />} 
+          onClick={openAddModal}
+          className="bg-indigo-600 hover:bg-indigo-700 border-none shadow-sm rounded-lg flex items-center h-11 w-full sm:w-auto justify-center"
+        >
+          Add User
+        </Button>
+      </div>
+
+      {/* Control Filters Area */}
+      <Card className="shadow-sm border-gray-200 rounded-xl mb-6" styles={{ body: { padding: "16px" } }}>
+        <div className="flex flex-col md:flex-row gap-3 justify-between items-stretch md:items-center">
+          <Input
+            prefix={<SearchOutlined className="text-gray-400" />}
+            placeholder="Search name or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            allowClear
+            className="rounded-lg h-10 md:w-1/3 w-full"
+          />
+
+          <div className="flex flex-wrap gap-2 items-center">
+            <Select 
+              value={roleFilter} 
+              onChange={setRoleFilter}
+              className="h-10 w-32"
             >
-              <option>Active</option>
-              <option>Inactive</option>
-              <option>Blocked</option>
-            </select>
+              <Select.Option value="all">All Roles</Select.Option>
+              <Select.Option value="Admin">Admin</Select.Option>
+              <Select.Option value="Manager">Manager</Select.Option>
+              <Select.Option value="User">User</Select.Option>
+            </Select>
 
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setModalOpen(false)} className="px-3 py-2 bg-gray-200 rounded">
-                Cancel
-              </button>
+            <Select 
+              value={statusFilter} 
+              onChange={setStatusFilter}
+              className="h-10 w-32"
+            >
+              <Select.Option value="all">All Status</Select.Option>
+              <Select.Option value="Active">Active</Select.Option>
+              <Select.Option value="Inactive">Inactive</Select.Option>
+              <Select.Option value="Blocked">Blocked</Select.Option>
+            </Select>
 
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="px-3 py-2 bg-blue-600 text-white rounded"
-              >
-                {loading ? "Saving..." : "Save"}
-              </button>
-            </div>
+            <Button 
+              onClick={handleClearFilters}
+              className="h-10 rounded-lg"
+            >
+              Clear
+            </Button>
+            
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={fetchUsers}
+              loading={loading}
+              className="h-10 rounded-lg flex items-center justify-center"
+            />
           </div>
         </div>
+      </Card>
+
+      {/* Bulk actions banner */}
+      {selectedUsers.length > 0 && (
+        <div className="bg-indigo-50 border border-indigo-150 rounded-xl p-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 animate-pulse">
+          <div className="flex items-center gap-2">
+            <InfoCircleOutlined className="text-indigo-600 text-base flex-shrink-0" />
+            <span className="text-indigo-800 text-xs sm:text-sm font-medium">
+              {selectedUsers.length} user account(s) selected
+            </span>
+          </div>
+          <Space className="w-full sm:w-auto justify-end">
+            <Popconfirm
+              title="Delete Selected Accounts"
+              description={`Delete all ${selectedUsers.length} selected accounts permanently?`}
+              onConfirm={deleteSelected}
+              okText="Yes"
+              cancelText="No"
+              okButtonProps={{ danger: true }}
+            >
+              <Button type="primary" danger size="small" icon={<DeleteOutlined />}>
+                Delete Selected
+              </Button>
+            </Popconfirm>
+            <Button size="small" onClick={() => setSelectedUsers([])}>Cancel</Button>
+          </Space>
+        </div>
       )}
+
+      {/* Main Grid Display */}
+      <Card className="shadow-sm border-gray-200 rounded-xl overflow-hidden" styles={{ body: { padding: 0 } }}>
+        
+        {/* Desktop Table View */}
+        <div className="hidden md:block">
+          <Table
+            columns={columns}
+            dataSource={filteredUsers}
+            rowKey="id"
+            rowSelection={{
+              selectedRowKeys: selectedUsers,
+              onChange: (keys) => setSelectedUsers(keys),
+            }}
+            loading={loading}
+            scroll={{ x: 800 }}
+            locale={{
+              emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No user accounts registered" />,
+            }}
+            pagination={{
+              pageSize: 8,
+              showSizeChanger: false,
+               placement: "bottomCenter",
+              className: "py-4",
+            }}
+          />
+        </div>
+
+        {/* Mobile Cards Grid View */}
+        <div className="block md:hidden p-3 bg-gray-50">
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <Badge status="processing" text="Refreshing account registry..." />
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No user accounts found matching query" />
+          ) : (
+            <div className="space-y-3">
+              {/* Select All on Mobile */}
+              <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-200 select-none">
+                <Checkbox
+                  checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
+                  onChange={handleSelectAllMobile}
+                >
+                  <span className="text-xs font-semibold text-gray-700">Select All ({filteredUsers.length})</span>
+                </Checkbox>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Mobile List View</span>
+              </div>
+              
+              <Row gutter={[12, 12]}>
+                {filteredUsers.map((u) => {
+                  return (
+                    <Col span={24} key={u.id}>
+                      <Card 
+                        className="border border-gray-200 rounded-lg shadow-sm"
+                        styles={{ body: { padding: "12px" } }}
+                        actions={[
+                          <EditOutlined key="edit" className="text-amber-500" onClick={() => openEditModal(u)} />,
+                          <Popconfirm
+                            key="block"
+                            title={u.is_blocked ? "Unblock Account?" : "Block Account?"}
+                            onConfirm={() => handleBlockUser(u)}
+                            okText="Yes"
+                            cancelText="No"
+                          >
+                            {u.is_blocked ? (
+                              <UnlockOutlined className="text-green-500" />
+                            ) : (
+                              <LockOutlined className="text-red-500" />
+                            )}
+                          </Popconfirm>,
+                          <Popconfirm
+                            key="delete"
+                            title="Delete User"
+                            description="Permanently delete account?"
+                            onConfirm={() => deleteUser(u.id)}
+                            okButtonProps={{ danger: true }}
+                          >
+                            <DeleteOutlined className="text-red-500" />
+                          </Popconfirm>
+                        ]}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={selectedUsers.includes(u.id)}
+                            onChange={() => toggleSelect(u.id)}
+                            className="mt-1"
+                          />
+                          <div className="flex-grow min-w-0">
+                            <div className="flex justify-between items-center gap-1">
+                              <h4 className="font-bold text-sm text-gray-800 truncate">{u.name}</h4>
+                              <div className="flex-shrink-0 flex gap-1.5">
+                                {getRoleTag(u.role)}
+                              </div>
+                            </div>
+                            <p className="text-xs text-gray-400 truncate mt-0.5">{u.email}</p>
+                            
+                            <div className="flex justify-between items-center mt-3 pt-2.5 border-t border-gray-100">
+                              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Account status</span>
+                              {getStatusTag(u.status, u.is_blocked)}
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    </Col>
+                  );
+                })}
+              </Row>
+            </div>
+          )}
+        </div>
+
+      </Card>
+
+      {/* Add / Edit Form Modal */}
+      <Modal
+        title={
+          <span className="text-lg font-black text-gray-800">
+            {editId ? "Modify User Account" : "Register User Account"}
+          </span>
+        }
+        open={modalOpen}
+        onOk={() => formInstance.submit()}
+        onCancel={() => setModalOpen(false)}
+        confirmLoading={submitLoading}
+        okText={editId ? "Save Changes" : "Create Account"}
+        cancelText="Cancel"
+        okButtonProps={{ className: "bg-indigo-600" }}
+        width={500}
+        centered
+        className="rounded-2xl overflow-hidden"
+      >
+        <Form
+          form={formInstance}
+          layout="vertical"
+          onFinish={handleSubmit}
+          className="mt-4"
+          initialValues={{ role: "User", status: "Active" }}
+        >
+          <Form.Item
+            name="name"
+            label={<span className="text-xs font-bold text-gray-700">Full Name</span>}
+            rules={[{ required: true, message: "Enter user's name" }]}
+          >
+            <Input placeholder="e.g. John Doe" className="h-9 rounded-md" />
+          </Form.Item>
+
+          <Form.Item
+            name="email"
+            label={<span className="text-xs font-bold text-gray-700">Email Address</span>}
+            rules={[
+              { required: true, message: "Enter email address" },
+              { type: "email", message: "Enter a valid email address" }
+            ]}
+          >
+            <Input placeholder="e.g. john@example.com" className="h-9 rounded-md" />
+          </Form.Item>
+
+          {!editId && (
+            <Form.Item
+              name="password"
+              label={<span className="text-xs font-bold text-gray-700">Password</span>}
+              rules={[{ required: true, message: "Password required" }]}
+            >
+              <Input.Password placeholder="Enter secure password" className="h-9 rounded-md" />
+            </Form.Item>
+          )}
+
+          <Row gutter={12}>
+            <Col span={12}>
+              <Form.Item
+                name="role"
+                label={<span className="text-xs font-bold text-gray-700">System Role</span>}
+                rules={[{ required: true }]}
+              >
+                <Select className="w-full h-9">
+                  <Select.Option value="User">User</Select.Option>
+                  <Select.Option value="Manager">Manager</Select.Option>
+                  <Select.Option value="Admin">Admin</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            
+            <Col span={12}>
+              <Form.Item
+                name="status"
+                label={<span className="text-xs font-bold text-gray-700">Access Status</span>}
+                rules={[{ required: true }]}
+              >
+                <Select className="w-full h-9">
+                  <Select.Option value="Active">Active</Select.Option>
+                  <Select.Option value="Inactive">Inactive</Select.Option>
+                  <Select.Option value="Blocked">Blocked</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Modal>
+
     </div>
+   </ProtectedRoute>
   );
 }

@@ -1,191 +1,308 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Toaster ,toast } from "sonner";
-import { apiFetch } from "../../api/api"
+
+import React, { useState, useEffect, useMemo } from "react";
+import ProtectedRoute from "../../../component/ProtectedRoute";
+import { 
+  Card, 
+  Table, 
+  Button, 
+  Input, 
+  Space, 
+  Row, 
+  Col, 
+  Tooltip, 
+  Popconfirm, 
+  message, 
+  Empty,
+  Form
+} from "antd";
+import { 
+  PlusOutlined, 
+  EditOutlined, 
+  DeleteOutlined, 
+  SearchOutlined,
+  CloseOutlined,
+  ReloadOutlined
+} from "@ant-design/icons";
+import { apiFetch } from "../../api/api";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
+  
+  // Form input states
   const [name, setName] = useState("");
-  const [editId, setEditId] = useState(null);
   const [editCategory, setEditCategory] = useState(null);
+  const [editName, setEditName] = useState("");
   
-const [editName, setEditName] = useState("");
+  // UI states
+  const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-
-  useEffect(() => {
-  apiFetch("http://localhost:5000/api/catagories")
-    .then(data => {
-      console.log(data);
+  // Fetch Categories from Backend API
+  const fetchCategories = async () => {
+    setLoading(true);
+    try {
+      const data = await apiFetch("http://localhost:5000/api/catagories");
       setCategories(data.categories || []);
-    })
-    .catch(err => {
-      console.error(err.message);
-    });
-}, []);
- 
- const handleSubmit = async () => {
-  if (!name) return alert("Enter category name");
+    } catch (error) {
+      console.error(error);
+      message.error("Failed to load categories catalog");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  try {
-    const data = await apiFetch("http://localhost:5000/api/catagories", {
-      method: "POST",
-      body: JSON.stringify({ name }),
-    });
+  // Initial load
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
-    toast.success("Category added successfully");
-
-    setName("");
-    await fetchCategories();
-
-  } catch (error) {
-    toast.error(error.message || "Failed to add category");
-  }
-};
-
-
-const handleUpdate = async () => {
-  if (!editName) return toast.error("Enter category name");
-
-  try {
-    const data = await apiFetch(
-      `http://localhost:5000/api/catagories/${editCategory.id}`,
-      {
-        method: "PUT",
-        body: JSON.stringify({ name: editName }),
-      }
+  // Client-side search filtering
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery) return categories;
+    return categories.filter((cat) => 
+      cat.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
+  }, [categories, searchQuery]);
 
-    toast.success("Category updated successfully");
+  // Handle Add Category Submission
+  const handleSubmit = async () => {
+    if (!name.trim()) {
+      message.warning("Please enter a category name");
+      return;
+    }
 
-    setEditCategory(null);
-    setEditName("");
-    await fetchCategories();
+    setSubmitLoading(true);
+    try {
+      await apiFetch("http://localhost:5000/api/catagories", {
+        method: "POST",
+        body: JSON.stringify({ name: name.trim() }),
+      });
 
-  } catch (error) {
-    toast.error(error.message || "Failed to update category");
-  }
-};
+      message.success("Category added successfully");
+      setName("");
+      await fetchCategories();
+    } catch (error) {
+      message.error(error.message || "Failed to add category");
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
 
- 
-const fetchCategories = async () => {
-  try {
-    const data = await apiFetch("http://localhost:5000/api/catagories");
+  // Handle Update Category Submission
+  const handleUpdate = async () => {
+    if (!editName.trim()) {
+      message.warning("Please enter a category name");
+      return;
+    }
 
-    setCategories(data.categories || []);
+    setSubmitLoading(true);
+    try {
+      await apiFetch(`http://localhost:5000/api/catagories/${editCategory.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ name: editName.trim() }),
+      });
 
-  } catch (error) {
-    console.error(error);
-  }
-};
-   const handleDelete = async (id) => {
-  try {
-    await apiFetch(`http://localhost:5000/api/catagories/${id}`, {
-      method: "DELETE",
-    });
+      message.success("Category updated successfully");
+      setEditCategory(null);
+      setEditName("");
+      await fetchCategories();
+    } catch (error) {
+      message.error(error.message || "Failed to update category");
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
 
-    toast.success("Category deleted successfully");
+  // Handle Delete Action
+  const handleDelete = async (id) => {
+    try {
+      await apiFetch(`http://localhost:5000/api/catagories/${id}`, {
+        method: "DELETE",
+      });
 
-    await fetchCategories();
+      message.success("Category deleted successfully");
+      await fetchCategories();
+    } catch (error) {
+      message.error(error.message || "Failed to delete category");
+    }
+  };
 
-  } catch (error) {
-    toast.error(error.message || "Failed to delete category");
-  }
-};
+  const handleEdit = (cat) => {
+    setEditCategory(cat);   // Store selected category object
+    setEditName(cat.name);  // Populate edit input value
+  };
 
-   const handleEdit = (cat) => {
-  setEditCategory(cat);   // pura object store
-  setEditName(cat.name);  // input me value
-};
-
-
+  // Desktop Table Columns configuration
+  const columns = [
   
-  return (
-    <div className="p-6 ">
-      <h1 className="text-2xl font-bold mb-4">Categories</h1>
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      sorter: (a, b) => a.name.localeCompare(b.name),
+      render: (text) => <span className="font-semibold text-gray-800">{text}</span>,
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 120,
+      render: (_, record) => (
+        <Space size="middle">
+          <Tooltip title="Edit">
+            <Button
+              type="text"
+              icon={<EditOutlined className="text-amber-500 hover:scale-110 transition-transform" />}
+              onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+          
+          <Tooltip title="Delete">
+            <Popconfirm
+              title="Delete Category"
+              description={`Delete "${record.name}" permanently?`}
+              onConfirm={() => handleDelete(record.id)}
+              okText="Yes"
+              cancelText="No"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined className="hover:scale-110 transition-transform" />}
+              />
+            </Popconfirm>
+          </Tooltip>
+        </Space>
+      ),
+    },
+  ];
 
-      {/*  Add Category */}
-      <div className="flex gap-2 mb-4">
-        <input
-          type="text"
-          placeholder="Enter category name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="border p-2 rounded w-64"
-        />
-        <button
-          onClick={handleSubmit}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+  return (
+
+   <ProtectedRoute>
+     <div className="p-4 sm:p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
+      
+      {/* Title Header area */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+            Categories Management
+          </h1>
+          <p className="text-gray-500 text-xs sm:text-sm mt-1">
+            Create, edit, and organize product categories for your store catalog.
+          </p>
+        </div>
+        <Button 
+          icon={<ReloadOutlined />} 
+          onClick={fetchCategories} 
+          loading={loading}
+          className="rounded-lg flex items-center h-10 w-full sm:w-auto justify-center bg-white border-gray-200"
         >
-          Add
-        </button>
+          Refresh Data
+        </Button>
       </div>
 
-      {/*  Edit Form */}
-      {editCategory && (
-        <div className="mb-4 p-4 border rounded bg-gray-200">
-          <h2 className="mb-2 font-bold">Edit Category</h2>
-
-          <input
-            type="text"
-            value={editName}
-            onChange={(e) => setEditName(e.target.value)}
-            className="border p-2 rounded mr-2"
-          />
-
-          <button
-            onClick={handleUpdate}
-            className="bg-green-500 text-white px-3 py-1 rounded mr-2"
+      <Row gutter={[24, 24]}>
+        
+        {/* Left Side: Category Create/Edit Card Form */}
+        <Col xs={24} lg={8}>
+          <Card 
+            title={
+              <span className="text-sm font-bold text-gray-800">
+                {editCategory ? "Modify Category" : "Create Category"}
+              </span>
+            }
+            className="shadow-sm border-gray-200 rounded-xl"
+            styles={{ body: { padding: "20px" } }}
           >
-            Update
-          </button>
+            <Form layout="vertical" onFinish={editCategory ? handleUpdate : handleSubmit}>
+              <Form.Item 
+                label={<span className="text-xs font-bold text-gray-700">Category Name</span>}
+                required
+              >
+                <Input
+                  type="text"
+                  placeholder="e.g. Footwear, Electronics"
+                  value={editCategory ? editName : name}
+                  onChange={(e) => editCategory ? setEditName(e.target.value) : setName(e.target.value)}
+                  className="h-10 rounded-lg"
+                />
+              </Form.Item>
 
-          <button
-            onClick={() => setEditCategory(null)}
-            className="bg-gray-400 px-3 py-1 rounded"
-          >
-            Cancel
-          </button>
-        </div>
-      )}
-
-      {/*  Category List */}
-      <table className="w-full  border border-collapse">
-        <thead>
-          <tr className="bg-gray-200 pb-10  ">
-            
-            <th className="p-3 text-center">Name</th>
-            <th className="p-3 text-center">Actions</th>
-          </tr>
-        </thead>
-
-        <tbody >
-          {Array.isArray(categories) &&
-            categories.map((cat) => (
-              <tr key={cat.id} className="text-center border border-gray-300">
-                
-                <td>{cat.name}</td>
-                <td className="space-x-2 p-7">
-                  <button
-                    onClick={() => handleEdit(cat)}
-                    className="bg-gray-400 px-2 py-1 rounded"
+              <Space className="w-full justify-end mt-2">
+                {editCategory && (
+                  <Button 
+                    onClick={() => {
+                      setEditCategory(null);
+                      setEditName("");
+                    }}
+                    icon={<CloseOutlined />}
+                    className="rounded-lg h-9 flex items-center"
                   >
-                    Edit
-                  </button>
+                    Cancel
+                  </Button>
+                )}
+                
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={submitLoading}
+                  icon={<PlusOutlined />}
+                  className="bg-indigo-600 hover:bg-indigo-700 border-none rounded-lg h-9 flex items-center"
+                >
+                  {editCategory ? "Update" : "Add"}
+                </Button>
+              </Space>
+            </Form>
+          </Card>
+        </Col>
 
-                  <button
-                    onClick={() => handleDelete(cat.id)}
+        {/* Right Side: Category Registry List Table Card */}
+        <Col xs={24} lg={16}>
+          <Card 
+            className="shadow-sm border-gray-200 rounded-xl overflow-hidden"
+            styles={{ body: { padding: 0 } }}
+          >
+            {/* Table Search Filtering Utility header */}
+            <div className="p-4 bg-white border-b border-gray-150 flex items-center justify-between gap-4">
+              <Input
+                prefix={<SearchOutlined className="text-gray-400" />}
+                placeholder="Search categories..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                allowClear
+                className="max-w-xs rounded-lg h-9"
+              />
+              <span className="text-xs text-gray-400 font-medium select-none">
+                Total: {filteredCategories.length} categories
+              </span>
+            </div>
 
-                    className="bg-gray-400 px-2 py-1 rounded"                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
+            {/* List Table container */}
+            <Table
+              dataSource={filteredCategories}
+              columns={columns}
+              rowKey="id"
+              loading={loading}
+              scroll={{ x: 500 }}
+              locale={{
+                emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No categories registered yet" />,
+              }}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: false,
+                  placement: "bottomCenter",
+                className: "py-4",
+              }}
+            />
+          </Card>
+        </Col>
+
+      </Row>
+
     </div>
+   </ProtectedRoute>
   );
 }
-
-
-

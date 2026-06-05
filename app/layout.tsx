@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+
 import { CartProvider } from "./context/CartContext";
-import Navbar from "@/component/Navbar";
-import Footer from "@/component/Footer";
 import { Toaster } from 'sonner';
 import { AuthProvider } from "./context/AuthContext";
+import LayoutWrapper from "@/component/LayoutWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,10 +36,11 @@ export default function RootLayout({
         <AuthProvider>
         
          <CartProvider>
- <Navbar /> 
- <Toaster position="top-right" /> 
-       <main className="grow mt-20">{children}</main>
-       <Footer />
+<LayoutWrapper>
+  <main className="grow ">{children}</main>
+</LayoutWrapper>
+            <Toaster position="top-right" />
+
          </CartProvider>
          </AuthProvider>
        </body>

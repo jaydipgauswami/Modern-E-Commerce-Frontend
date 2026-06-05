@@ -13,7 +13,7 @@ export function isTokenExpired(token) {
   const payload = parseJwt(token);
   if (!payload) return true;
   const now = Date.now() / 1000; // current time in seconds
-  return now > payload.exp;
+  return now > payload.exp * 1000;
 }
 
 // Refresh token

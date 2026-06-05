@@ -1,436 +1,229 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Toaster, toast } from "sonner";
-
-
 import {
   Card,
   Row,
   Col,
-    Spin,
+  Spin,
   Typography,
   Button,
   Space,
   Tag,
   Divider,
-   Popconfirm,  
-
+  Tooltip,
+  message
 } from "antd";
-
 import {
   ShoppingCartOutlined,
   MinusOutlined,
   PlusOutlined,
   HeartOutlined,
   HeartFilled,
-  ThunderboltOutlined,
-  
+  ThunderboltOutlined
 } from "@ant-design/icons";
-
 import { useCart } from "../../context/CartContext";
 
 const { Title, Paragraph, Text } = Typography;
 
-export default function ProductDetailClient({
-  product,
-}) {
-  const { addToCart ,  wishlistItems,
-setWishlistItems, handleWishlist,handleBuyNow , } = useCart();
+export default function ProductDetailClient({ product }) {
+  // Cart & Wishlist Context
+  const { 
+    addToCart, 
+    wishlistItems = [], 
+    handleWishlist, 
+    handleBuyNow 
+  } = useCart();
 
-  const [quantity, setQuantity] =
-    useState(1);
+  // Buy state
+  const [quantity, setQuantity] = useState(1);
 
-  const unitPrice =
-    Number(product.price) || 0;
-
-  const totalPrice =
-    unitPrice * quantity;
+  const unitPrice = Number(product?.price) || 0;
+  const totalPrice = unitPrice * quantity;
 
   const handleIncrement = () => {
     setQuantity((prev) => prev + 1);
   };
 
   const handleDecrement = () => {
-    setQuantity((prev) =>
-      prev > 1 ? prev - 1 : 1
-    );
+    setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
   };
 
   const handleAddToCart = () => {
     addToCart(product, quantity);
-
-   
+    message.success(`Added ${quantity} "${product.name}" to cart`);
   };
-   if (!product) {
-      return (
-        <div
-          style={{
-            height: "80vh",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
+
+  // Memoize wishlist check for speed
+  const isWishlisted = useMemo(() => {
+    return wishlistItems.some((item) => item.id === product?.id);
+  }, [wishlistItems, product]);
+
+  // Wishlist toggle event with instant notice popups
+  const onToggleWishlist = (e) => {
+    e.stopPropagation();
+    handleWishlist(product);
+    // if (isWishlisted) {
+    //   message.info(`Removed "${product.name}" from your wishlist`);
+    // } else {
+    //   message.success(`Added "${product.name}" to your wishlist!`);
+    // }
+  };
+
+  // Loading Fallback
+  if (!product) {
+    return (
+      <div className="h-[80vh] flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-3">
           <Spin size="large" />
+          <span className="text-gray-400 text-xs font-semibold">Opening Specifications...</span>
         </div>
-      );
-    }
-  
+      </div>
+    );
+  }
 
   return (
-    <div
-      style={{
-        minHeight: "0vh",
-        background:
-          "linear-gradient(to right, #f8fafc, #eef2ff)",
-        padding: "0px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",
-      }}
-    >
-      <Toaster position="top-right" />
-
+    <div className="p-4 sm:p-6 bg-gradient-to-r from-slate-50 to-indigo-50 min-h-screen flex items-center justify-center">
+      
       <Card
-        variant="outlined"
-        style={{
-          width: "100%",
-          maxWidth: "1000px",
-          borderRadius: "24px",
-          overflow: "hidden",
-          boxShadow:
-            "0 10px 40px rgba(0,0,0,0.08)",
-        }}
-        styles={{
-          body: {
-            padding: "20px",
-          },
-        }}
+        className="w-full max-w-5xl rounded-3xl border-none shadow-xl overflow-hidden bg-white"
+        styles={{ body: { padding: "24px sm:36px" } }}
       >
-        <Row
-          gutter={[40, 40]}
-          align="middle"
-        >
-
-                
-
-          {/* LEFT IMAGE */}
+        <Row gutter={[40, 32]} align="middle">
+          
+          {/* LEFT: Product Image Section */}
           <Col xs={24} md={12}>
             <motion.div
-              whileHover={{
-                scale: 1.03,
-              }}
-              transition={{
-                duration: 0.3,
-              }}
+              whileHover={{ scale: 1.015 }}
+              transition={{ duration: 0.3 }}
+              className="relative overflow-hidden rounded-2xl border border-gray-100 shadow-sm"
             >
-
-              {/* WISHLIST BUTTON */}
-<div
-  style={{
-    position: "relative",
-    width: "100%",
-    marginTop: "10px",
-  }}
->
-  <Popconfirm
-    title={
-            wishlistItems?.some(
-  (item) => item.id === product.id
-)
-        ? "Remove from Wishlist"
-        : "Add to Wishlist"
-    }
-    description={
-          wishlistItems?.some(
-  (item) => item.id === product.id
-)
-        ? "Do you want to remove this item?"
-        : "Do you want to add this item?"
-    }
-    okText="Done"
-    cancelText="Cancel"
-    onConfirm={(e) => {
-      e?.stopPropagation();
-      handleWishlist(product);
-    }}
-    onCancel={(e) => {
-      e?.stopPropagation();
-    }}
-    onPopupClick={(e) =>
-      e.stopPropagation()
-    }
-  >
-    <Button
-      size="large"
-      block
-      icon={
-              wishlistItems?.some(
-  (item) => item.id === product.id
-) ? (
-          <HeartFilled />
-        ) : (
-          <HeartOutlined />
-        )
-      }
-      style={{
-        height: "54px",
-        borderRadius: "14px",
-        fontSize: "17px",
-        fontWeight: 600,
-        border:
-                wishlistItems?.some(
-  (item) => item.id === product.id
-)
-            ? "1px solid #ff4d4f"
-            : "1px solid #d9d9d9",
-        background:
-                wishlistItems?.some(
-  (item) => item.id === product.id
-)
-            ? "#fff1f0"
-            : "#fff",
-        color:
-                wishlistItems?.some(
-  (item) => item.id === product.id
-)
-            ? "#ff4d4f"
-            : "#000",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {      wishlistItems?.some(
-  (item) => item.id === product.id
-)
-        ? "Wishlisted"
-        : "Add To Wishlist"}
-
-      {/* PLUS ICON */}
-      {!      wishlistItems?.some(
-  (item) => item.id === product.id
-) && (
-        <span
-          style={{
-            position: "absolute",
-            top: "10px",
-            right: "14px",
-            width: "18px",
-            height: "18px",
-            borderRadius: "50%",
-            background: "#1677ff",
-            color: "#fff",
-            fontSize: "12px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: "bold",
-          }}
-        >
-          +
-        </span>
-      )}
-    </Button>
-  </Popconfirm>
-</div>
               <img
-                src={
-                  product.image
-                    ? `http://localhost:5000/uploads/${product.image}`
-                    : null
-                }
+                src={product.image ? `http://localhost:5000/uploads/${product.image}` : "https://placehold.co/500x500?text=No+Image"}
                 alt={product.name}
-                style={{
-                  width: "100%",
-                  height: "500px",
-                  objectFit: "cover",
-                  borderRadius: "24px",
-                }}
+                onError={(e) => { e.target.src = "https://placehold.co/500x500?text=No+Image"; }}
+                className="w-full h-[300px] sm:h-[450px] md:h-[500px] object-cover rounded-2xl"
               />
             </motion.div>
           </Col>
 
-          {/* RIGHT CONTENT */}
+          {/* RIGHT: Product Metadata & Checkout Details */}
           <Col xs={24} md={12}>
-            <Space
-              orientation="vertical"
-              size={18}
-              style={{ width: "100%" }}
-            >
-              {/* BRAND */}
+            <Space orientation="vertical" size={20} className="w-full">
+              
+              {/* Brand Tag */}
               <Tag
                 color="purple"
-                style={{
-                  width: "fit-content",
-                  padding:
-                    "6px 16px",
-                  fontSize: "15px",
-                  borderRadius: "30px",
-                  fontWeight: 600,
-                }}
+                className="border-none rounded-full px-4 py-1 text-xs font-bold uppercase tracking-wider w-fit"
               >
-                {product.brand ||
-                  "No Brand"}
+                {product.brand || "Generic Brand"}
               </Tag>
 
-              {/* TITLE */}
-              <Title
-                level={1}
-                style={{
-                  margin: 0,
-                  fontSize: "42px",
-                  lineHeight: 1.2,
-                }}
-              >
-                {product.name}
-              </Title>
-
-              {/* PRICE */}
-              <Text
-                strong
-                style={{
-                  fontSize: "36px",
-                  color: "#16a34a",
-                }}
-              >
-                ₹
-                {unitPrice.toLocaleString()}
-              </Text>
-
-              {/* DESCRIPTION */}
-              <Paragraph
-                style={{
-                  fontSize: "17px",
-                  color: "#555",
-                  lineHeight: 1.8,
-                  marginBottom: 0,
-                }}
-              >
-                {product.description}
-              </Paragraph>
-              <Divider />
-              {/* QUANTITY */}
+              {/* Product Title */}
               <div>
-                <Text
-                  strong
-                  style={{
-                    fontSize: "18px",
-                  }}
-                >
-                  Quantity
-                </Text>
+                <Title level={1} className="m-0 text-gray-900 font-extrabold text-2xl sm:text-3xl leading-snug">
+                  {product.name}
+                </Title>
+              </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems:
-                      "center",
-                    gap: "16px",
-                    marginTop: "16px",
-                  }}
-                >
+              {/* Price Details */}
+              <div>
+                <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">Retail Price</span>
+                <Text className="font-black text-3xl text-emerald-600 block mt-1">
+                  ₹{unitPrice.toLocaleString("en-IN")}
+                </Text>
+              </div>
+
+              {/* Description Details */}
+              <div>
+                <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block mb-1">Description</span>
+                <Paragraph className="text-gray-500 text-sm leading-relaxed m-0 bg-gray-50 p-3.5 rounded-xl border border-gray-100">
+                  {product.description || "This item has no write-up description logs."}
+                </Paragraph>
+              </div>
+
+              <Divider className="my-1 border-gray-100" />
+
+              {/* Quantity Select Segment */}
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <Text className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">Select Quantity</Text>
+                
+                <div className="flex items-center gap-4 bg-gray-50 p-1.5 rounded-xl border border-gray-150 select-none">
                   <Button
                     shape="circle"
-                    icon={
-                      <MinusOutlined />
-                    }
-                    onClick={
-                      handleDecrement
-                    }
+                    type="text"
+                    icon={<MinusOutlined />}
+                    onClick={handleDecrement}
+                    disabled={quantity <= 1}
+                    className="flex items-center justify-center text-gray-500 hover:text-indigo-600 disabled:text-gray-300"
                   />
-
-                  <Text
-                    strong
-                    style={{
-                      fontSize: "22px",
-                      minWidth: "30px",
-                      textAlign:
-                        "center",
-                    }}
-                  >
+                  <Text className="font-extrabold text-base min-w-[24px] text-center text-gray-800">
                     {quantity}
                   </Text>
-
                   <Button
                     shape="circle"
-                    icon={
-                      <PlusOutlined />
-                    }
-                    onClick={
-                      handleIncrement
-                    }
+                    type="text"
+                    icon={<PlusOutlined />}
+                    onClick={handleIncrement}
+                    className="flex items-center justify-center text-gray-500 hover:text-indigo-600"
                   />
                 </div>
               </div>
 
-              {/* TOTAL */}
-              <div>
-                <Text
-                  strong
-                  style={{
-                    fontSize: "18px",
-                    color: "#666",
-                  }}
-                >
-                  Total Price
-                </Text>
-
-                <Title
-                  level={2}
-                  style={{
-                    margin:
-                      "5px 0 0",
-                    color: "#1677ff",
-                  }}
-                >
-                  ₹
-                  {totalPrice.toLocaleString()}
-                </Title>
+              {/* Price Summary Breakdown Box */}
+              <div className="bg-indigo-50/50 border border-indigo-150 p-4 rounded-xl flex justify-between items-center select-none">
+                <div>
+                  <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">Total Subtotal</span>
+                  <span className="text-xl font-black text-indigo-600 mt-0.5 block">
+                    ₹{totalPrice.toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wide">
+                  {quantity} Unit(s) × ₹{unitPrice.toLocaleString("en-IN")}
+                </span>
               </div>
 
-              {/* BUTTON */}
-              <Button
-                type="primary"
-                size="large"
-                icon={
-                  <ShoppingCartOutlined />
-                }
-                onClick={
-                  handleAddToCart
-                }
-                style={{
-                  height: "54px",
-                  borderRadius:
-                    "14px",
-                  fontSize: "17px",
-                  fontWeight: 600,
-                  marginTop: "10px",
-                }}
-                block
-              >
-                Add To Cart
-              </Button>
-
-               <Button
-                  type=""
+              {/* Action Buttons Row */}
+              <div className="flex flex-col sm:flex-row items-stretch gap-3.5 pt-2">
+                <Button
+                  type="primary"
                   size="large"
-                  block
+                  icon={<ShoppingCartOutlined />}
+                  onClick={handleAddToCart}
+                  className="bg-indigo-600 hover:bg-indigo-700 border-none rounded-xl font-bold flex items-center justify-center gap-2 h-12 flex-grow order-2 sm:order-1"
+                >
+                  Add to Cart
+                </Button>
+
+                <Button
+                  type="default"
+                  size="large"
                   icon={<ThunderboltOutlined />}
-                  onClick={() => handleBuyNow()}
-                  style={{
-                    fontWeight: "600",
-                  }}
+                  onClick={() => handleBuyNow(product)}
+                  className="bg-amber-500 hover:bg-amber-600 text-white hover:text-white border-none rounded-xl font-bold flex items-center justify-center gap-2 h-12 flex-grow order-1 sm:order-2"
                 >
                   Buy Now
                 </Button>
-               
+
+                <Tooltip title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}>
+                  <Button
+                    size="large"
+                    shape="circle"
+                    icon={isWishlisted ? <HeartFilled className="text-red-500" /> : <HeartOutlined className="text-gray-600 hover:text-red-500" />}
+                    onClick={onToggleWishlist}
+                    className={`h-12 w-12 flex items-center justify-center border rounded-xl order-3 ${
+                      isWishlisted ? "bg-red-50 border-red-200" : "bg-white border-gray-200"
+                    }`}
+                  />
+                </Tooltip>
+              </div>
+              
             </Space>
           </Col>
         </Row>
       </Card>
+      
     </div>
   );
 }
