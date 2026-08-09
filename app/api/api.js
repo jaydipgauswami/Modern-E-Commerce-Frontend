@@ -3,11 +3,15 @@ export  const apiFetch = async (url, options = {}) => {
   const token = localStorage.getItem("token");
 
   // token nahi hai
-  if (!token) {
-    localStorage.removeItem("token");
-    window.location.href = "/login";
-    return null;
+ if (!token) {
+  localStorage.removeItem("token");
+
+  if (typeof window !== "undefined") {
+    window.location.replace("/login");
   }
+
+  throw new Error("No token found");
+}
 
   const res = await fetch(url, {
     ...options,
@@ -19,11 +23,15 @@ export  const apiFetch = async (url, options = {}) => {
   });
 
   // expired / invalid token
-  if (res.status === 401) {
-    localStorage.removeItem("token");
-    window.location.href = "/login";
-    return null;
+ if (res.status === 401) {
+  localStorage.removeItem("token");
+
+  if (typeof window !== "undefined") {
+    window.location.replace("/login");
   }
+
+  throw new Error("Unauthorized");
+}
 
   //  agar response me body hi na ho (rare case)
   let data = null;

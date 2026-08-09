@@ -9,19 +9,38 @@ export default function ProtectedRoute({ children }) {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const checkToken = () => {
+      const token = localStorage.getItem("token");
 
-    if (!token || isTokenExpired(token)) {
-      localStorage.removeItem("token");
-      router.replace("/login");
-      return;
+      
+
+      if (!token || isTokenExpired(token)) {
+        console.log("Redirecting to login...");
+        localStorage.removeItem("token");
+        router.replace("/login");
+        return false;
+      }
+
+      return true;
+    };
+
+    // Initial check
+    const valid = checkToken();
+
+    if (valid) {
+      setChecking(false);
     }
 
-    setChecking(false);
+    // Check every 10 seconds
+    const interval = setInterval(() => {
+      checkToken();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, [router]);
 
   if (checking) {
-    return null; // kuch render nahi hoga
+    return null;
   }
 
   return children;

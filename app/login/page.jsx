@@ -13,7 +13,6 @@ export default function LoginPage() {
 
 const { login } = useAuth();
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -59,9 +58,12 @@ const { login } = useAuth();
         localStorage.setItem("role", data.user.role);
       localStorage.setItem("user", JSON.stringify(data.user));
       login(data.user);
+      
   toast.success("Login successful", { duration: 1000 });
-
+ 
      if (data.user.role === "admin") {
+      await getCart();
+    await getWishlist();
       router.push("/admin/dashboard");
     } else {
         await getCart();

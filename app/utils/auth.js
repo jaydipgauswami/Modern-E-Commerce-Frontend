@@ -10,19 +10,25 @@ export function parseJwt(token) {
 // Check if token expired
 export function isTokenExpired(token) {
   if (!token) return true;
+
   const payload = parseJwt(token);
   if (!payload) return true;
-  const now = Date.now() / 1000; // current time in seconds
-  return now > payload.exp * 1000;
-}
 
+  const now = Date.now() / 1000;
+
+  return now > payload.exp;
+}
 // Refresh token
 export async function refreshToken() {
   try {
+        console.log("Refreshing token...");
+
     const res = await fetch("http://localhost:5000/api/auth/refresh-token", {
       method: "POST",
       credentials: "include", // agar refresh token cookie me hai
     });
+     console.log("Refresh status:", res.status);
+
     if (!res.ok) throw new Error("Refresh token failed");
     const data = await res.json();
     localStorage.setItem("token", data.token);
@@ -30,7 +36,7 @@ export async function refreshToken() {
   } catch (err) {
     console.error("Refresh token error:", err);
     localStorage.removeItem("token");
-    window.location.href = "/login"; // redirect to login
+   window.location.replace("/login"); // redirect to login
     return null;
   }
 }

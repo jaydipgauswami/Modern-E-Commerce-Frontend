@@ -12,9 +12,14 @@ export const CartProvider = ({ children }) => {
 
   const [cartItems, setCartItems] = useState([]);
   const [wishlistItems, setWishlistItems] = useState([]);
+  const [summary, setSummary] = useState({
+  subtotal: 0,
+  shipping: 0,
+  total: 0,
+});
 
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  // const token =
+  //   typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
 const clearCart = () => {
   setCartItems([]);
@@ -26,6 +31,7 @@ const clearWishlist = () => {
 
   const getCart = async () => {
     try {
+         const token = localStorage.getItem("token");
       const res = await fetch("http://localhost:5000/api/cart", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -33,9 +39,17 @@ const clearWishlist = () => {
       });
 
       const data = await res.json();
+       
 
       if (res.ok) {
         setCartItems(data.carts || []);
+      setSummary(
+        data.summary || {
+          subtotal: 0,
+          shipping: 0,
+          total: 0,
+        }
+      );
       }
     } catch (err) {
       console.error("Get cart error:", err);
@@ -215,12 +229,14 @@ const handleWishlist = async (product) => {
   const handleBuyNow = (product) => {
     router.push("/checkout");
   };
-  useEffect(() => {
-    if (token) {
-      getCart();
-      getWishlist();
-    }
-  }, []);
+ useEffect(() => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    getCart();
+    getWishlist();
+  }
+}, []);
   return (
     <CartContext.Provider
       value={{
@@ -228,6 +244,7 @@ const handleWishlist = async (product) => {
         clearWishlist,
         cartItems,
         wishlistItems,
+         summary,
         addToCart,
         getCart,
         updateQuantity,

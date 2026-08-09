@@ -160,7 +160,7 @@ const [searchText, setSearchText] =
       <div className="h-[80vh] flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-3">
           <Spin size="large" />
-          <span className="text-gray-400 text-xs font-semibold">Opening Catalog...</span>
+          <span className="text-gray-400 text-xs font-semibold">loading....</span>
         </div>
       </div>
     );

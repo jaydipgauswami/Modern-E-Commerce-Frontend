@@ -12,6 +12,7 @@ import {
   Skeleton,
   Tooltip,
   Badge,
+  Spin,
 } from "antd";
 import {
   DeleteOutlined,
@@ -263,6 +264,7 @@ function CartPage() {
   const router = useRouter();
  const {
   cartItems,
+  summary,
   getCart,
   updateQuantity,
   removeFromCart,
@@ -274,6 +276,7 @@ function CartPage() {
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState(null);
   const [couponCode, setCouponCode] = useState("");
+ 
   // Fetch cart on mount
   useEffect(() => {
     const fetchCart = async () => {
@@ -304,7 +307,7 @@ function CartPage() {
       ),
     [cartItems]
   );
-  const shipping = subtotal > 999 ? 0 : 99;
+  const shipping = subtotal > 50100 ? 0 : 99;
   const totalPrice = subtotal + shipping;
   // Check if item is wishlisted
 
@@ -320,8 +323,6 @@ function CartPage() {
   },
   [wishlistItems]
 );
-  
- 
   // Handle clear all cart
   const handleClearCart = useCallback(() => {
     Modal.confirm({
@@ -342,9 +343,17 @@ function CartPage() {
   }, [cartItems, removeFromCart]);
   const navigateToProducts = () => router.push("/products");
   const navigateToCheckout = () => router.push("/checkout");
-  // ==========================================
-  // RENDER
-  // ==========================================
+if (loading) {
+       return (
+         <div className="h-[80vh] flex items-center justify-center bg-gray-50">
+           <div className="flex flex-col items-center gap-3">
+             <Spin size="large" />
+             <span className="text-gray-400 text-xs font-semibold">loading....</span>
+           </div>
+         </div>
+       );
+     }
+  // RENDER 
   return (
     <ProtectedRoute>
       <div className="cart-page">
@@ -432,13 +441,13 @@ function CartPage() {
                       {totalQuantity === 1 ? "item" : "items"})
                     </span>
                     <span className="summary-row-value">
-                      {formatCurrency(subtotal)}
+                     {formatCurrency(summary.subtotal)}
                     </span>
                   </div>
                   <div className="summary-row">
                     <span className="summary-row-label">Shipping</span>
                     <span className="summary-row-value">
-                      {shipping === 0 ? (
+                      {summary.shipping === 0 ? (
                         <Badge
                           count="FREE"
                           style={{
@@ -450,18 +459,21 @@ function CartPage() {
                           }}
                         />
                       ) : (
-                        formatCurrency(shipping)
+                        formatCurrency(summary.shipping)
                       )}
                     </span>
                   </div>
-                  {shipping > 0 && (
-                    <div className="savings-badge">
-                      <GiftOutlined />
-                      Add {formatCurrency(999 - subtotal)} more for free
-                      shipping!
-                    </div>
-                  )}
-                  {shipping === 0 && (
+                 {summary.shipping > 0 && (
+  <div className="savings-badge">
+    <GiftOutlined />
+    Add{" "}
+    {formatCurrency(
+      Math.max(999 - summary.subtotal, 0)
+    )}{" "}
+    more for free shipping!
+  </div>
+)}
+                  {summary.shipping === 0 && (
                     <div className="savings-badge">
                       <CheckCircleOutlined />
                       You qualify for free shipping!
@@ -471,7 +483,7 @@ function CartPage() {
                   <div className="summary-row-total">
                     <span className="summary-total-label">Total</span>
                     <Title level={3} className="summary-total-value">
-                      {formatCurrency(totalPrice)}
+                      {formatCurrency(summary.total)}
                     </Title>
                   </div>
                   {/* Coupon */}
@@ -541,7 +553,7 @@ function CartPage() {
               <div className="mobile-checkout-price">
                 <span className="mobile-checkout-price-label">Total</span>
                 <span className="mobile-checkout-price-value">
-                  {formatCurrency(totalPrice)}
+                {formatCurrency(summary.total)}
                 </span>
               </div>
               <Button
